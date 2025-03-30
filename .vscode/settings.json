@@ -1,0 +1,8 @@
+{
+    "makefile.configureOnOpen": false,
+    "github.copilot.chat.reviewSelection.instructions": [
+        {
+            "text": "tests should be written using ginkgo and gomega",
+        }
+    ]
+}

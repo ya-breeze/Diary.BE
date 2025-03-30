@@ -1,0 +1,39 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/go
+{
+	"name": "Go",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+	},
+	"mounts": [
+		"source=projectname-bashhistory,target=/command_history,type=volume"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"streetsidesoftware.code-spell-checker",
+				"ms-vscode.makefile-tools",
+				"42Crunch.vscode-openapi",
+				"redhat.vscode-yaml",
+				"qwtel.sqlite-viewer",
+				"streetsidesoftware.code-spell-checker-czech",
+				"ms-vscode.copilot-mermaid-diagram",
+				"casualjim.gotemplate"
+			],
+			"settings": {
+				"go.formatTool": "gofumpt",
+				"editor.formatOnSave": true,
+				"editor.rulers": [
+					100,
+					140
+				]
+			}
+		}
+	},
+	"containerEnv": {
+		"HOST_PWD": "${localWorkspaceFolder}"
+	}
+}
