@@ -6,7 +6,6 @@ import (
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
-//nolint:funlen,cyclop,gocognit
 func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 	tmpl, err := r.loadTemplates()
 	if err != nil {

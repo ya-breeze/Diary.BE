@@ -36,7 +36,6 @@ func NewWebAppRouter(
 	}
 }
 
-//nolint:funlen // This is a webapp router, it's supposed to have many routes.
 func (r *WebAppRouter) Routes() goserver.Routes {
 	return goserver.Routes{
 		"RootPath": goserver.Route{

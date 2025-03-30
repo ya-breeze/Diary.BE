@@ -14,7 +14,6 @@ type Config struct {
 	Verbose                     bool   `mapstructure:"verbose" default:"false"`
 	Port                        int    `mapstructure:"port" default:"8080"`
 	DBPath                      string `mapstructure:"dbpath" default:":memory:"`
-	Prefill                     bool   `mapstructure:"prefill" default:"false"`
 	DisableImporters            bool   `mapstructure:"disableimporters" default:"false"`
 	DisableCurrenciesRatesFetch bool   `mapstructure:"disablecurrenciesratesfetch" default:"false"`
 }
