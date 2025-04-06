@@ -3,6 +3,7 @@ package webapp
 import (
 	"net/http"
 
+	"github.com/ya-breeze/diary.be/pkg/database/models"
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
@@ -28,8 +29,25 @@ func (r *WebAppRouter) editHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		return
 	}
-
 	data["UserID"] = userID
+
+	itemID := req.URL.Query().Get("itemID")
+	data["itemID"] = itemID
+
+	if itemID != "" {
+		item, err := r.db.GetItem(userID, itemID)
+		if err != nil {
+			r.logger.Error("Failed to get item", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		data["item"] = item
+	} else {
+		data["item"] = &models.Item{
+			Title: "",
+			Text:  "",
+		}
+	}
 
 	// dateFrom, dateTo, err := getTimeRange(req, utils.GranularityMonth)
 	// if err != nil {
@@ -47,18 +65,7 @@ func (r *WebAppRouter) editHandler(w http.ResponseWriter, req *http.Request) {
 	// ).AddDate(-1, 0, 0).Unix()
 	// data["Next"] = dateTo.Unix()
 
-	if utils.IsMobile(req.Header.Get("User-Agent")) {
-		data["Template"] = "home_mobile.tpl"
-	} else {
-		data["Template"] = "home.tpl"
-	}
-
-	templateName, ok := data["Template"].(string)
-	if !ok {
-		r.logger.Error("Failed to assert template name")
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
+	templateName := "edit.tpl"
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
 		r.logger.Warn("failed to execute template", "error", err, "template", templateName)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

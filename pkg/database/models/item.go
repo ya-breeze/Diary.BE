@@ -2,12 +2,12 @@ package models
 
 import (
 	"github.com/google/uuid"
-	"gorm.io/gorm"
 )
 
 type Item struct {
-	gorm.Model
+	// gorm.Model
 
+	Date  string `gorm:"index"`
 	Title string
 	Text  string
 	IDs   IDList `gorm:"type:json"`
