@@ -45,13 +45,24 @@ func (r *WebAppRouter) Routes() goserver.Routes {
 		},
 		"Login": goserver.Route{
 			Method:      "POST",
-			Pattern:     "/",
+			Pattern:     "/web/login",
 			HandlerFunc: r.loginHandler,
+		},
+		"Logout": goserver.Route{
+			Method:      "GET",
+			Pattern:     "/web/logout",
+			HandlerFunc: r.logoutHandler,
 		},
 		"AboutPath": goserver.Route{
 			Method:      "GET",
 			Pattern:     "/web/about",
 			HandlerFunc: r.aboutHandler,
+		},
+
+		"Edit": goserver.Route{
+			Method:      "GET",
+			Pattern:     "/web/edit",
+			HandlerFunc: r.editHandler,
 		},
 	}
 }

@@ -6,13 +6,13 @@ import (
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
-func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
+func (r *WebAppRouter) editHandler(w http.ResponseWriter, req *http.Request) {
 	tmpl, err := r.loadTemplates()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	data := utils.CreateTemplateData(req, "home")
+	data := utils.CreateTemplateData(req, "edit")
 
 	session, err := r.cookies.Get(req, "session-name")
 	if err != nil {
@@ -20,7 +20,6 @@ func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	userID, ok := session.Values["userID"].(string)
 	if !ok {
 		if err := tmpl.ExecuteTemplate(w, "login.tpl", data); err != nil {

@@ -10,7 +10,7 @@
 
     <form action="/web/transactions/edit" method="POST">
         <input type="hidden" name="id" value="{{ .Transaction.ID }}">
-        <h5>{{ formatTime .Transaction.Date "2006-01-02" }}</h5>
+        <h5>{{ formatTime .Item.Date "2006-01-02" }}</h5>
         <div class="mb-3">
             <label for="description" class="form-label">Description:</label>
             <input type="text" class="form-control" name="description" value="{{ .Transaction.Description }}">

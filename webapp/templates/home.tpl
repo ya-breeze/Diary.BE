@@ -1,20 +1,6 @@
 {{ template "header.tpl" . }}
 
 <main>
-    {{ with .UserID }}
-    {{ else }}
-        <h2>This is the Home Page. Please login</h2>
-        <form action="/" method="POST">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <br>
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <br>
-            <button type="submit">Login</button>
-        </form>
-    {{ end }}
-
     {{ with .Expenses }}
         <h2>Expenses</h2>
         <a href="{{ addQueryParam $.CurrentURL "from" (timestamp (addMonths $.To -2)) }}" class="btn btn-primary" tabindex="-1" role="button">
