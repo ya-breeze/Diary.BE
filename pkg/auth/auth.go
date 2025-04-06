@@ -37,7 +37,7 @@ func CreateJWT(userID, secret string) (string, error) {
 	signingKey := []byte(secret)
 
 	claims := &jwt.RegisteredClaims{
-		Issuer:    "geekbudget",
+		Issuer:    "diary",
 		Subject:   userID,
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 	}
