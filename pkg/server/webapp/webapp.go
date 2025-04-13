@@ -43,15 +43,45 @@ func (r *WebAppRouter) Routes() goserver.Routes {
 			Pattern:     "/",
 			HandlerFunc: r.homeHandler,
 		},
+
 		"Login": goserver.Route{
 			Method:      "POST",
-			Pattern:     "/",
+			Pattern:     "/web/login",
 			HandlerFunc: r.loginHandler,
 		},
+		"Logout": goserver.Route{
+			Method:      "GET",
+			Pattern:     "/web/logout",
+			HandlerFunc: r.logoutHandler,
+		},
+
 		"AboutPath": goserver.Route{
 			Method:      "GET",
 			Pattern:     "/web/about",
 			HandlerFunc: r.aboutHandler,
+		},
+
+		"Edit": goserver.Route{
+			Method:      "GET",
+			Pattern:     "/web/edit",
+			HandlerFunc: r.editHandler,
+		},
+		"Save": goserver.Route{
+			Method:      "POST",
+			Pattern:     "/web/edit",
+			HandlerFunc: r.saveHandler,
+		},
+
+		"Upload": goserver.Route{
+			Method:      "POST",
+			Pattern:     "/web/upload",
+			HandlerFunc: r.uploadHandler,
+		},
+
+		"Assets": goserver.Route{
+			Method:      "GET",
+			Pattern:     "/web/assets/{rest:.*}",
+			HandlerFunc: r.assetsHandler,
 		},
 	}
 }

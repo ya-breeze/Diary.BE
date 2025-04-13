@@ -1,19 +1,13 @@
 package models
 
-import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
-)
-
 type Item struct {
-	gorm.Model
+	UserID string `gorm:"primaryKey"`
+	Date   string `gorm:"primaryKey"`
 
 	Title string
-	Text  string
-	IDs   IDList `gorm:"type:json"`
-
-	UserID string    `gorm:"index"`
-	ID     uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Body  string
+	Tags  StringList `gorm:"type:json"`
+	// AssetIDs StringList `gorm:"type:json"`
 }
 
 // func (u Item) FromDB() goserver.Item {

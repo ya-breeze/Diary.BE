@@ -1,8 +1,12 @@
 package webapp
 
 import (
+	"errors"
+	"html/template"
 	"net/http"
 
+	"github.com/gomarkdown/markdown"
+	"github.com/ya-breeze/diary.be/pkg/database"
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
@@ -20,26 +24,33 @@ func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	userID, ok := session.Values["userID"].(string)
-	if ok {
-		data["UserID"] = userID
-
-		// dateFrom, dateTo, err := getTimeRange(req, utils.GranularityMonth)
-		// if err != nil {
-		// 	r.logger.Error("Failed to get time range", "error", err)
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		// dateFrom = dateFrom.AddDate(0, -12, 0)
-
-		// data["From"] = dateFrom
-		// data["To"] = dateTo
-		// data["Current"] = dateFrom.Unix()
-		// data["Last"] = time.Date(
-		// 	dateFrom.Year(), 1, 1, 0, 0, 0, 0, dateFrom.Location(),
-		// ).AddDate(-1, 0, 0).Unix()
-		// data["Next"] = dateTo.Unix()
+	if !ok {
+		if err := tmpl.ExecuteTemplate(w, "login.tpl", data); err != nil {
+			r.logger.Warn("failed to execute login template", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
 	}
+
+	data["UserID"] = userID
+
+	date := req.URL.Query().Get("date")
+	if date == "" {
+		date = utils.GetCurrentDate()
+	}
+	item, err := r.db.GetItem(userID, date)
+	if err != nil {
+		if !errors.Is(err, database.ErrNotFound) {
+			r.logger.Error("Failed to get item", "error", err, "date", date, "userID", userID)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+	data["item"] = item
+	body := markdown.ToHTML([]byte(item.Body), nil, utils.NewImagePrefixRenderer("/web/assets/"))
+	data["body"] = template.HTML(string(body))
 
 	if utils.IsMobile(req.Header.Get("User-Agent")) {
 		data["Template"] = "home_mobile.tpl"

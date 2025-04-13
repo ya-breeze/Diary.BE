@@ -1,10 +1,10 @@
 package webapp
 
 import (
-	"errors"
+	"html/template"
 	"net/http"
+	"time"
 
-	"github.com/ya-breeze/diary.be/pkg/database"
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
@@ -23,7 +23,7 @@ func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	userID, err := r.db.GetUserID(username)
-	if err != nil && !errors.Is(err, database.ErrNotFound) {
+	if err != nil {
 		r.logger.Warn("failed to get user ID", "username", username)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -58,4 +58,53 @@ func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 	if err := tmpl.ExecuteTemplate(w, "home.tpl", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+func (r *WebAppRouter) logoutHandler(w http.ResponseWriter, req *http.Request) {
+	if err := req.ParseForm(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	c := &http.Cookie{
+		Name:     "session-name",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+	}
+	http.SetCookie(w, c)
+
+	tmpl, err := r.loadTemplates()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data := utils.CreateTemplateData(req, "login")
+
+	if err := tmpl.ExecuteTemplate(w, "login.tpl", data); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func (r *WebAppRouter) GetUserIDFromSession(
+	tmpl *template.Template, w http.ResponseWriter, req *http.Request,
+) (string, error) {
+	session, err := r.cookies.Get(req, "session-name")
+	if err != nil {
+		r.logger.Error("Failed to get session", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return "", err
+	}
+
+	userID, ok := session.Values["userID"].(string)
+	if !ok {
+		if err := tmpl.ExecuteTemplate(w, "login.tpl", nil); err != nil {
+			r.logger.Warn("failed to execute login template", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return "", nil
+	}
+
+	return userID, nil
 }
