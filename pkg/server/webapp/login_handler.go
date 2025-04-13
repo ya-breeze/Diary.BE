@@ -1,6 +1,7 @@
 package webapp
 
 import (
+	"html/template"
 	"net/http"
 	"time"
 
@@ -84,4 +85,26 @@ func (r *WebAppRouter) logoutHandler(w http.ResponseWriter, req *http.Request) {
 	if err := tmpl.ExecuteTemplate(w, "login.tpl", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func (r *WebAppRouter) GetUserIDFromSession(
+	tmpl *template.Template, w http.ResponseWriter, req *http.Request,
+) (string, error) {
+	session, err := r.cookies.Get(req, "session-name")
+	if err != nil {
+		r.logger.Error("Failed to get session", "error", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return "", err
+	}
+
+	userID, ok := session.Values["userID"].(string)
+	if !ok {
+		if err := tmpl.ExecuteTemplate(w, "login.tpl", nil); err != nil {
+			r.logger.Warn("failed to execute login template", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return "", nil
+	}
+
+	return userID, nil
 }

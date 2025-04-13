@@ -28,6 +28,7 @@ type Storage interface {
 	PutUser(user *models.User) error
 
 	GetItem(userID, itemID string) (*models.Item, error)
+	PutItem(userID string, item *models.Item) error
 }
 
 type storage struct {
@@ -111,9 +112,9 @@ func (s *storage) GetUserID(username string) (string, error) {
 
 // #region Item
 
-func (s *storage) GetItem(userID, itemID string) (*models.Item, error) {
+func (s *storage) GetItem(userID, date string) (*models.Item, error) {
 	var item models.Item
-	if err := s.db.Where("id = ? and user_id = ?", itemID, userID).First(&item).Error; err != nil {
+	if err := s.db.Where("date = ? and user_id = ?", date, userID).First(&item).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ErrNotFound
 		}
@@ -122,6 +123,15 @@ func (s *storage) GetItem(userID, itemID string) (*models.Item, error) {
 	}
 
 	return &item, nil
+}
+
+func (s *storage) PutItem(userID string, item *models.Item) error {
+	item.UserID = userID
+	if err := s.db.Save(*item).Error; err != nil {
+		return fmt.Errorf(StorageError, err)
+	}
+
+	return nil
 }
 
 // #endregion Item

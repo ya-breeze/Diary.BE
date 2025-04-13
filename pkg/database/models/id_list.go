@@ -6,10 +6,10 @@ import (
 	"errors"
 )
 
-type IDList []int
+type StringList []string
 
 // Implement the sql.Scanner interface
-func (s *IDList) Scan(value interface{}) error {
+func (s *StringList) Scan(value any) error {
 	if value == nil {
 		*s = nil
 		return nil
@@ -22,7 +22,7 @@ func (s *IDList) Scan(value interface{}) error {
 }
 
 // Implement the driver.Valuer interface
-func (s IDList) Value() (driver.Value, error) {
+func (s StringList) Value() (driver.Value, error) {
 	if s == nil {
 		return nil, nil
 	}

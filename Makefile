@@ -15,6 +15,7 @@ run: build
 	GB_PREFILL=true \
 	GB_DISABLEIMPORTERS=true \
 	GB_DBPATH=$(ROOT_DIR)diary.db \
+	GB_ASSETPATH=$(ROOT_DIR)/diary-assets \
 	./bin/diary server
 
 .PHONY: replace-templates

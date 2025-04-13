@@ -1,63 +1,97 @@
 {{ template "header.tpl" . }}
 
+<script>
+$(document).ready(function () {
+    // Event delegation for all dynamically added images
+    $(document).on('click', 'img[id^="dynamicImg_"]', function () {
+        const clickedId = $(this).attr('id');
+        $('#body').val(function(i, val) {
+            return val + '\n![](' + clickedId.replace('dynamicImg_', '') + ')\n';
+        });
+        $('#body').focus();
+    });
+
+    $('#uploadBtn').on('click', function () {
+        var fileInput = $('#imageUpload')[0];
+        if (fileInput.files.length === 0) {
+            alert('Please select an image.');
+            return;
+        }
+
+        console.log("Uploading file: ", fileInput.files[0]);
+        var formData = new FormData();
+        formData.append('asset', fileInput.files[0]);
+
+        $.ajax({
+            url: 'upload',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log("Upload successful, response: ", response);
+
+                // Assuming the server returns the asset URL
+                var src = $(location).attr('origin') + '/web/assets/' + response;
+                const imgId = 'dynamicImg_' + response;
+                $('#assets').append('<div class="card" style="width: 18rem;"><img src="' + src + '" id="' + imgId + '" class="card-img-top"></div>');
+                
+                $('#asset_ids').val(function(index, currentValue) {
+                    return currentValue + response + ',';
+                });
+
+                $('#imageUpload').val(''); // Clear the file input
+            },
+            error: function () {
+                alert('Upload failed.');
+            }
+        });
+    });
+});
+</script>
+
 <main>
-    <h2>Transaction</h2>
     {{ with .Error }}
     <div class="alert alert-danger" role="alert">
         {{ . }}
     </div>
     {{ end }}
 
-    <form action="/web/transactions/edit" method="POST">
-        <input type="hidden" name="id" value="{{ .Transaction.ID }}">
-        <h5>{{ formatTime .Item.Date "2006-01-02" }}</h5>
-        <div class="mb-3">
-            <label for="description" class="form-label">Description:</label>
-            <input type="text" class="form-control" name="description" value="{{ .Transaction.Description }}">
-        </div>
+    <div class="row">
+        <div class="col">
+            <form action="/web/edit" method="POST">
+                <input type="hidden" name="date" value="{{ .item.Date }}"/>
+                <input type="hidden" id="user_id" value="{{ .UserID }}"/>
 
-        {{ if ne .Transaction.PartnerName "" }}
-        <h6>Partner name: {{ .Transaction.PartnerName }}</h6>
-        {{ end }}
-        {{ if ne .Transaction.PartnerAccount "" }}
-        <h6>Partner account: {{ .Transaction.PartnerAccount }}</h6>
-        {{ end }}
-        {{ if ne .Transaction.Place "" }}
-        <h6>Place: {{ .Transaction.Place }}</h6>
-        {{ end }}
-        <div class="mb-3">
-            <label for="tags" class="form-label">Tags</label>
-            <input type="text" class="form-control" name="tags" value="{{ range .Transaction.Tags }}{{.}}, {{ end }}">
-        </div>
-        </h6>
-        <p>
-            <h6>Movements</h6>
-            {{ range $i, $m := .Transaction.Movements }}
-                <div class="card" style="width: 18rem;">
-                    <input type="hidden" name="currency_{{ $i }}" value="{{ $m.CurrencyID }}">
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="amount_{{ $i }}" class="form-label">Amount ({{ $m.CurrencyName }})</label>
-                            <input type="text" class="form-control" name="amount_{{ $i }}" value="{{ $m.Amount }}">
-                        </div>
+                <h5>{{ .item.Date }}</h5>
 
-                        <div class="mb-3">
-                            <label for="account" class="form-label">Account</label>
-                            <select class="form-select" name="account_{{ $i }}">
-                                <option value="">Select account</option>
-                                {{ range $.Accounts }}
-                                <option value="{{ .Id }}" {{ if eq .Id $m.AccountID }}selected{{ end }}>
-                                    {{.Type}}: {{ .Name }}
-                                </option>
-                                {{ end }}
-                            </select>
-                        </div>
-                    </div>
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <input type="text" class="form-control" name="title" value="{{ .item.Title }}"/>
                 </div>
-            {{ end }}
-        </p>
-        <button type="submit">Save</button>
-    </form>
+
+                <div class="mb-3">
+                    <label for="body" class="form-label">Body:</label>
+                    <textarea class="form-control" name="body" id="body" rows="10">{{ .item.Body }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label for="tags" class="form-label">Tags</label>
+                    <input type="text" class="form-control" name="tags" value="{{ range .item.Tags }}{{.}}, {{ end }}"/>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+        <div class="col-3 text-center">`
+            <input type="file" id="imageUpload" />
+            <button id="uploadBtn" class="btn btn-secondary">Upload asset</button>
+
+            <h5>Assets</h5>
+            <div id="assets">
+            </div>
+        </div>
+    </div>
 </main>
 
 {{ template "footer.tpl" . }}
