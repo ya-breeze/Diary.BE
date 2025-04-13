@@ -2,6 +2,10 @@
 
 <script>
 $(document).ready(function () {
+    {{ range .assets }}
+        addImage("{{ . }}");
+    {{ end }}
+
     // Event delegation for all dynamically added images
     $(document).on('click', 'img[id^="dynamicImg_"]', function () {
         const clickedId = $(this).attr('id');
@@ -10,6 +14,12 @@ $(document).ready(function () {
         });
         $('#body').focus();
     });
+
+    function addImage(name) {
+        var src = $(location).attr('origin') + '/web/assets/' + name;
+        const imgId = 'dynamicImg_' + name;
+        $('#assets').append('<div class="card" style="width: 18rem;"><img src="' + src + '" id="' + imgId + '" class="card-img-top"></div>');
+    }
 
     $('#uploadBtn').on('click', function () {
         var fileInput = $('#imageUpload')[0];
@@ -30,17 +40,9 @@ $(document).ready(function () {
             processData: false,
             success: function (response) {
                 console.log("Upload successful, response: ", response);
-
-                // Assuming the server returns the asset URL
-                var src = $(location).attr('origin') + '/web/assets/' + response;
-                const imgId = 'dynamicImg_' + response;
-                $('#assets').append('<div class="card" style="width: 18rem;"><img src="' + src + '" id="' + imgId + '" class="card-img-top"></div>');
-                
-                $('#asset_ids').val(function(index, currentValue) {
-                    return currentValue + response + ',';
-                });
-
-                $('#imageUpload').val(''); // Clear the file input
+                addImage(response);
+                // Clear the file input
+                $('#imageUpload').val('');
             },
             error: function () {
                 alert('Upload failed.');

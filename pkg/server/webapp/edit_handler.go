@@ -43,6 +43,7 @@ func (r *WebAppRouter) editHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 	data["item"] = item
+	data["assets"] = utils.GetAssetsFromMarkdown(item.Body)
 
 	templateName := "edit.tpl"
 	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
