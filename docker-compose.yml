@@ -5,12 +5,12 @@ services:
       dockerfile: Dockerfile
     pull_policy: build
     ports:
-      - "${PORT}:8080"
+      - "${PORT}:8090"
     environment:
       - GB_USERS=test:JDJhJDEwJC9sVWJpTlBYVlZvcU9ZNUxIZmhqYi4vUnRuVkJNaEw4MTQ2VUdFSXRDeE9Ib0ZoVkRLR3pl
       - GB_PREFILL=false
       - GB_DBPATH=/data/diary.db
-      - GB_ASSETPATH=/data//diary-assets
+      - GB_ASSETPATH=/data/diary-assets
     volumes:
       - diary:/data
 volumes:
