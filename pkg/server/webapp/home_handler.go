@@ -47,6 +47,11 @@ func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		item = &models.Item{
+			Date:  date,
+			Title: "",
+			Body:  "",
+		}
 	}
 	data["item"] = item
 	body := markdown.ToHTML([]byte(item.Body), nil, utils.NewImagePrefixRenderer("/web/assets/"))
