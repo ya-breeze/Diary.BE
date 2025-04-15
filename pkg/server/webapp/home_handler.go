@@ -7,6 +7,7 @@ import (
 
 	"github.com/gomarkdown/markdown"
 	"github.com/ya-breeze/diary.be/pkg/database"
+	"github.com/ya-breeze/diary.be/pkg/database/models"
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
