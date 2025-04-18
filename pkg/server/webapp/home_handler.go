@@ -48,11 +48,21 @@ func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 	//nolint:gosec // this is safe
 	data["body"] = template.HTML(string(body))
 
-	if utils.IsMobile(req.Header.Get("User-Agent")) {
-		data["Template"] = "home_mobile.tpl"
-	} else {
-		data["Template"] = "home.tpl"
+	// Find previous and next available dates
+	previousDate, err := r.db.GetPreviousDate(userID, date)
+	if err == nil {
+		data["previousDate"] = previousDate
 	}
+	nextDate, err := r.db.GetNextDate(userID, date)
+	if err == nil {
+		data["nextDate"] = nextDate
+	}
+
+	// if utils.IsMobile(req.Header.Get("User-Agent")) {
+	// data["Template"] = "home_mobile.tpl"
+	// } else {
+	data["Template"] = "home.tpl"
+	// }
 
 	templateName, ok := data["Template"].(string)
 	if !ok {

@@ -86,9 +86,5 @@ func (r *WebAppRouter) saveHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	templateName := "edit.tpl"
-	if err := tmpl.ExecuteTemplate(w, templateName, data); err != nil {
-		r.logger.Warn("failed to execute template", "error", err, "template", templateName)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	http.Redirect(w, req, "/?date="+item.Date, http.StatusSeeOther)
 }

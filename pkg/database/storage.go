@@ -29,6 +29,9 @@ type Storage interface {
 
 	GetItem(userID, itemID string) (*models.Item, error)
 	PutItem(userID string, item *models.Item) error
+
+	GetPreviousDate(userID, date string) (string, error)
+	GetNextDate(userID, date string) (string, error)
 }
 
 type storage struct {
@@ -152,3 +155,33 @@ func (s *storage) PutItem(userID string, item *models.Item) error {
 }
 
 // #endregion Item
+
+// #region Dates
+
+func (s *storage) GetPreviousDate(userID, date string) (string, error) {
+	var item models.Item
+	if err := s.db.Where("user_id = ? and date < ?", userID, date).Order("date desc").First(&item).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", ErrNotFound
+		}
+
+		return "", fmt.Errorf(StorageError, err)
+	}
+
+	return item.Date, nil
+}
+
+func (s *storage) GetNextDate(userID, date string) (string, error) {
+	var item models.Item
+	if err := s.db.Where("user_id = ? and date > ?", userID, date).Order("date asc").First(&item).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", ErrNotFound
+		}
+
+		return "", fmt.Errorf(StorageError, err)
+	}
+
+	return item.Date, nil
+}
+
+// #endregion Dates
