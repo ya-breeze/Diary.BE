@@ -144,7 +144,7 @@ func (s *storage) GetItem(userID, date string) (*models.Item, error) {
 
 func (s *storage) PutItem(userID string, item *models.Item) error {
 	item.UserID = userID
-	if err := s.db.Save(*item).Error; err != nil {
+	if err := s.db.Save(item).Error; err != nil {
 		return fmt.Errorf(StorageError, err)
 	}
 
