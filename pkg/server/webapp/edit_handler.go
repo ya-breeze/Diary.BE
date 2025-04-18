@@ -18,7 +18,7 @@ func (r *WebAppRouter) editHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	data := utils.CreateTemplateData(req, "edit")
 
-	userID, err := r.GetUserIDFromSession(tmpl, w, req)
+	userID, err := r.ValidateUserID(tmpl, w, req)
 	if err != nil {
 		r.logger.Error("Failed to get user ID from session", "error", err)
 		return
@@ -60,7 +60,7 @@ func (r *WebAppRouter) saveHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	data := utils.CreateTemplateData(req, "edit")
 
-	userID, err := r.GetUserIDFromSession(tmpl, w, req)
+	userID, err := r.ValidateUserID(tmpl, w, req)
 	if err != nil {
 		r.logger.Error("Failed to get user ID from session", "error", err)
 		return

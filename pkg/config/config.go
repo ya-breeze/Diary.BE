@@ -17,6 +17,8 @@ type Config struct {
 	AssetPath                   string `mapstructure:"assetpath" default:"/tmp/diary-assets"`
 	DisableImporters            bool   `mapstructure:"disableimporters" default:"false"`
 	DisableCurrenciesRatesFetch bool   `mapstructure:"disablecurrenciesratesfetch" default:"false"`
+	Issuer                      string `mapstructure:"issuer" default:"diary"`
+	CookieName                  string `mapstructure:"cookiename" default:"diarycookie"`
 }
 
 func InitiateConfig(cfgFile string) (*Config, error) {

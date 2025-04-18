@@ -80,8 +80,8 @@ func Serve(
 
 	if cfg.Users != "" {
 		logger.Info("Creating users...")
-		users := strings.Split(cfg.Users, ",")
-		for _, user := range users {
+		users := strings.SplitSeq(cfg.Users, ",")
+		for user := range users {
 			tokens := strings.Split(user, ":")
 			if len(tokens) != 2 {
 				return nil, nil, fmt.Errorf("invalid user format: %s", user)
@@ -120,10 +120,11 @@ func upsertUser(storage database.Storage, username, hashedPassword string, logge
 		}
 	} else {
 		logger.Info(fmt.Sprintf("Creating user %q", username))
-		_, err = storage.CreateUser(username, hashedPassword)
+		user, err = storage.CreateUser(username, hashedPassword)
 		if err != nil {
 			return fmt.Errorf("failed to create user: %w", err)
 		}
+		logger.Info(fmt.Sprintf("User %q created with ID %s", username, user.ID))
 	}
 
 	return nil

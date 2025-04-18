@@ -12,7 +12,6 @@ build:
 .PHONY: run
 run: build
 	@GB_USERS=test:JDJhJDEwJC9sVWJpTlBYVlZvcU9ZNUxIZmhqYi4vUnRuVkJNaEw4MTQ2VUdFSXRDeE9Ib0ZoVkRLR3pl \
-	GB_PREFILL=true \
 	GB_DISABLEIMPORTERS=true \
 	GB_DBPATH=$(ROOT_DIR)diary.db \
 	GB_ASSETPATH=$(ROOT_DIR)/diary-assets \

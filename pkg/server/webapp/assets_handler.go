@@ -7,16 +7,10 @@ import (
 )
 
 func (r *WebAppRouter) assetsHandler(w http.ResponseWriter, req *http.Request) {
-	session, err := r.cookies.Get(req, "session-name")
+	userID, code, err := r.GetUserIDFromSession(req)
 	if err != nil {
-		r.logger.Error("Failed to get session", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	userID, ok := session.Values["userID"].(string)
-	if !ok {
-		http.Error(w, "", http.StatusUnauthorized)
+		r.logger.Error("Failed to get user ID from session", "error", err)
+		http.Error(w, err.Error(), code)
 		return
 	}
 

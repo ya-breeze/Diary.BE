@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"errors"
+	"fmt"
 	"math/rand/v2"
 	"time"
 
@@ -33,11 +35,11 @@ func GenerateRandomString(length int) string {
 	return string(b)
 }
 
-func CreateJWT(userID, secret string) (string, error) {
+func CreateJWT(userID, issuer, secret string) (string, error) {
 	signingKey := []byte(secret)
 
 	claims := &jwt.RegisteredClaims{
-		Issuer:    "diary",
+		Issuer:    issuer,
 		Subject:   userID,
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 	}
@@ -49,4 +51,34 @@ func CreateJWT(userID, secret string) (string, error) {
 	}
 
 	return ss, nil
+}
+
+func CheckJWT(bearerToken, issuer, jwtSecret string) (string, error) {
+	// Parse the token
+	token, err := jwt.Parse(bearerToken, func(token *jwt.Token) (interface{}, error) {
+		// Make sure that the token method conforms to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		signingKey := []byte(jwtSecret)
+		return signingKey, nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("invalid token: %w", err)
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		userID, err := claims.GetSubject()
+		if err != nil {
+			return "", fmt.Errorf("invalid subject: %w", err)
+		}
+		actualIssuer, err := claims.GetIssuer()
+		if err != nil || actualIssuer != issuer {
+			return "", fmt.Errorf("invalid issuer: %w", err)
+		}
+
+		return userID, nil
+	}
+
+	return "", errors.New("invalid token")
 }

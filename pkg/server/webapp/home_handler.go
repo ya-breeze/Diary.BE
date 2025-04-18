@@ -19,22 +19,11 @@ func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	data := utils.CreateTemplateData(req, "home")
 
-	session, err := r.cookies.Get(req, "session-name")
+	userID, err := r.ValidateUserID(tmpl, w, req)
 	if err != nil {
-		r.logger.Error("Failed to get session", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		r.logger.Error("Failed to get user ID from session", "error", err)
 		return
 	}
-
-	userID, ok := session.Values["userID"].(string)
-	if !ok {
-		if err := tmpl.ExecuteTemplate(w, "login.tpl", data); err != nil {
-			r.logger.Warn("failed to execute login template", "error", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-		return
-	}
-
 	data["UserID"] = userID
 
 	date := req.URL.Query().Get("date")
@@ -56,6 +45,7 @@ func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	data["item"] = item
 	body := markdown.ToHTML([]byte(item.Body), nil, utils.NewImagePrefixRenderer("/web/assets/"))
+	//nolint:gosec // this is safe
 	data["body"] = template.HTML(string(body))
 
 	if utils.IsMobile(req.Header.Get("User-Agent")) {

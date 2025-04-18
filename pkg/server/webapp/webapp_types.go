@@ -1,4 +1,3 @@
-//nolint:tagliatelle
 package webapp
 
 // type WebAggregation struct {

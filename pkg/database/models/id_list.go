@@ -22,7 +22,7 @@ func (s *StringList) Scan(value any) error {
 }
 
 // Implement the driver.Valuer interface
-func (s StringList) Value() (driver.Value, error) {
+func (s *StringList) Value() (driver.Value, error) {
 	if s == nil {
 		return nil, nil
 	}

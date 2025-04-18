@@ -11,20 +11,14 @@ import (
 )
 
 func (r *WebAppRouter) uploadHandler(w http.ResponseWriter, req *http.Request) {
-	session, err := r.cookies.Get(req, "session-name")
+	userID, code, err := r.GetUserIDFromSession(req)
 	if err != nil {
-		r.logger.Error("Failed to get session", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		r.logger.Error("Failed to get user ID from session", "error", err)
+		http.Error(w, err.Error(), code)
 		return
 	}
 
-	userID, ok := session.Values["userID"].(string)
-	if !ok {
-		http.Error(w, "", http.StatusUnauthorized)
-		return
-	}
-
-	if err := req.ParseMultipartForm(10 << 20); err != nil {
+	if err = req.ParseMultipartForm(10 << 20); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -38,7 +32,7 @@ func (r *WebAppRouter) uploadHandler(w http.ResponseWriter, req *http.Request) {
 
 	// Save the file to the server
 	userAssetPath := filepath.Join(r.cfg.AssetPath, userID)
-	if err := os.MkdirAll(userAssetPath, 0755); err != nil {
+	if err = os.MkdirAll(userAssetPath, 0o755); err != nil {
 		r.logger.Error("Failed to create directory", "error", err, "path", userAssetPath)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

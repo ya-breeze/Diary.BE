@@ -63,6 +63,12 @@ func (s *storage) Close() error {
 }
 
 func (s *storage) CreateUser(username, hashedPassword string) (*models.User, error) {
+	_, err := s.GetUserID(username)
+	if err == nil {
+		s.log.Error("user already exists", "username", username)
+		return nil, fmt.Errorf("user %q already exists", username)
+	}
+
 	user := models.User{
 		ID:             uuid.New(),
 		Login:          username,
@@ -90,6 +96,17 @@ func (s *storage) GetUser(userID string) (*models.User, error) {
 }
 
 func (s *storage) PutUser(user *models.User) error {
+	existingUserID, err := s.GetUserID(user.Login)
+	if err != nil {
+		s.log.Error("failed to get user ID", "error", err, "user", user.Login)
+		return fmt.Errorf("failed to get user ID: %w", err)
+	}
+	if existingUserID != user.ID.String() {
+		s.log.Error("user ID mismatch", "expected", user.ID.String(), "actual", existingUserID)
+		return fmt.Errorf("user ID mismatch: expected %s, actual %s", user.ID.String(), existingUserID)
+	}
+
+	// Update the user in the database
 	if err := s.db.Save(user).Error; err != nil {
 		return fmt.Errorf(StorageError, err)
 	}
