@@ -12,6 +12,9 @@
     </a>
 {{ end }}
 
+{{ if .item.Title }}
+    <h1>{{ .item.Title }}</h1>
+{{ end }}
 
 <main>
     {{ with .body }}
