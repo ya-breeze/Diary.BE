@@ -6,10 +6,10 @@ RUN apt-get update && apt-get install -y \
 
 ENV USERNAME=vscode
 
-RUN go install mvdan.cc/gofumpt@v0.7.0
-RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.5
-RUN go install golang.org/x/tools/cmd/goimports@latest
-RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.23.0
+RUN go install mvdan.cc/gofumpt@v0.8.0
+RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+RUN go install golang.org/x/tools/cmd/goimports@v0.36.0
+RUN go install github.com/onsi/ginkgo/v2/ginkgo@v2.23.4
 RUN chown -R $USERNAME /go
 
 # Bash history
