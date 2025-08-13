@@ -1,0 +1,172 @@
+package api_test
+
+import (
+	"context"
+	"log/slog"
+	"net/http"
+	"os"
+	"path/filepath"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
+	"github.com/ya-breeze/diary.be/pkg/config"
+	"github.com/ya-breeze/diary.be/pkg/server/api"
+	"github.com/ya-breeze/diary.be/pkg/server/common"
+)
+
+var _ = Describe("AssetsAPIService", func() {
+	var (
+		service  *api.AssetsAPIServiceImpl
+		logger   *slog.Logger
+		cfg      *config.Config
+		tempDir  string
+		userID   string
+		testFile string
+		ctx      context.Context
+	)
+
+	BeforeEach(func() {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+
+		var err error
+		tempDir, err = os.MkdirTemp("", "assets_test")
+		Expect(err).NotTo(HaveOccurred())
+
+		cfg = &config.Config{
+			AssetPath: tempDir,
+		}
+
+		userID = "test-user-123"
+		ctx = context.WithValue(context.Background(), common.UserIDKey, userID)
+
+		// Create user directory and test file
+		userDir := filepath.Join(tempDir, userID)
+		err = os.MkdirAll(userDir, 0755)
+		Expect(err).NotTo(HaveOccurred())
+
+		testFile = filepath.Join(userDir, "test-image.jpg")
+		err = os.WriteFile(testFile, []byte("fake image content"), 0644)
+		Expect(err).NotTo(HaveOccurred())
+
+		service = api.NewAssetsAPIService(logger, cfg).(*api.AssetsAPIServiceImpl)
+	})
+
+	AfterEach(func() {
+		os.RemoveAll(tempDir)
+	})
+
+	Describe("GetAsset", func() {
+		Context("when user ID is missing from context", func() {
+			It("should return unauthorized", func() {
+				emptyCtx := context.Background()
+				response, err := service.GetAsset(emptyCtx, "test-image.jpg")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusUnauthorized))
+			})
+		})
+
+		Context("when path contains directory traversal", func() {
+			It("should return bad request for .. in path", func() {
+				response, err := service.GetAsset(ctx, "../secret.txt")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusBadRequest))
+			})
+
+			It("should return bad request for absolute path", func() {
+				response, err := service.GetAsset(ctx, "/etc/passwd")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+
+		Context("when accessing files in subdirectories", func() {
+			BeforeEach(func() {
+				// Create a subdirectory with a file
+				subDir := filepath.Join(tempDir, userID, "images")
+				err := os.MkdirAll(subDir, 0755)
+				Expect(err).NotTo(HaveOccurred())
+
+				subFile := filepath.Join(subDir, "photo.jpg")
+				err = os.WriteFile(subFile, []byte("photo content"), 0644)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should allow access to files in subdirectories", func() {
+				response, err := service.GetAsset(ctx, "images/photo.jpg")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusOK))
+				Expect(response.Body).To(BeAssignableToTypeOf(&os.File{}))
+
+				// Verify we can read from the file
+				file := response.Body.(*os.File)
+				defer file.Close()
+
+				content, err := os.ReadFile(file.Name())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).To(Equal("photo content"))
+			})
+
+			It("should handle nested subdirectories", func() {
+				// Create deeper nesting
+				deepDir := filepath.Join(tempDir, userID, "docs", "2023", "reports")
+				err := os.MkdirAll(deepDir, 0755)
+				Expect(err).NotTo(HaveOccurred())
+
+				deepFile := filepath.Join(deepDir, "report.pdf")
+				err = os.WriteFile(deepFile, []byte("report content"), 0644)
+				Expect(err).NotTo(HaveOccurred())
+
+				response, err := service.GetAsset(ctx, "docs/2023/reports/report.pdf")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusOK))
+			})
+		})
+
+		Context("when file does not exist", func() {
+			It("should return not found", func() {
+				response, err := service.GetAsset(ctx, "nonexistent.jpg")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusNotFound))
+			})
+		})
+
+		Context("when file exists", func() {
+			It("should return the file successfully", func() {
+				response, err := service.GetAsset(ctx, "test-image.jpg")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusOK))
+				Expect(response.Body).To(BeAssignableToTypeOf(&os.File{}))
+
+				// Verify we can read from the file
+				file := response.Body.(*os.File)
+				defer file.Close()
+
+				content, err := os.ReadFile(file.Name())
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).To(Equal("fake image content"))
+			})
+		})
+
+		Context("when path points to a directory", func() {
+			It("should return bad request", func() {
+				// Create a subdirectory
+				subDir := filepath.Join(tempDir, userID, "emptydir")
+				err := os.MkdirAll(subDir, 0755)
+				Expect(err).NotTo(HaveOccurred())
+
+				response, err := service.GetAsset(ctx, "emptydir")
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(response.Code).To(Equal(http.StatusBadRequest))
+			})
+		})
+	})
+})

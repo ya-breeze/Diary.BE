@@ -48,11 +48,11 @@ func Server(logger *slog.Logger, cfg *config.Config) error {
 	return nil
 }
 
-func createControllers(logger *slog.Logger, _ *config.Config, db database.Storage) goserver.CustomControllers {
+func createControllers(logger *slog.Logger, cfg *config.Config, db database.Storage) goserver.CustomControllers {
 	return goserver.CustomControllers{
 		// AuthAPIService:   api.NewAuthAPIService(logger, db),
-		UserAPIService: api.NewUserAPIService(logger, db),
-		// AssetsAPIService: api.NewAssetsAPIService(logger, db),
+		UserAPIService:   api.NewUserAPIService(logger, db),
+		AssetsAPIService: api.NewAssetsAPIService(logger, cfg),
 	}
 }
 
