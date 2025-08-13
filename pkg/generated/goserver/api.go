@@ -16,6 +16,13 @@ import (
 	"net/http"
 )
 
+// AssetsAPIRouter defines the required methods for binding the api requests to a responses for the AssetsAPI
+// The AssetsAPIRouter implementation should parse necessary information from the http request,
+// pass the data to a AssetsAPIServicer to perform the required actions, then write the service results to the http response.
+type AssetsAPIRouter interface {
+	GetAsset(http.ResponseWriter, *http.Request)
+}
+
 // AuthAPIRouter defines the required methods for binding the api requests to a responses for the AuthAPI
 // The AuthAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a AuthAPIServicer to perform the required actions, then write the service results to the http response.
@@ -28,6 +35,14 @@ type AuthAPIRouter interface {
 // pass the data to a UserAPIServicer to perform the required actions, then write the service results to the http response.
 type UserAPIRouter interface {
 	GetUser(http.ResponseWriter, *http.Request)
+}
+
+// AssetsAPIServicer defines the api actions for the AssetsAPI service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type AssetsAPIServicer interface {
+	GetAsset(context.Context, string) (ImplResponse, error)
 }
 
 // AuthAPIServicer defines the api actions for the AuthAPI service

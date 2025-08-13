@@ -3,10 +3,12 @@
 .travis.yml
 README.md
 api/openapi.yaml
+api_assets.go
 api_auth.go
 api_user.go
 client.go
 configuration.go
+docs/AssetsAPI.md
 docs/AuthAPI.md
 docs/AuthData.md
 docs/Authorize200Response.md
@@ -19,6 +21,7 @@ model_authorize_200_response.go
 model_entity.go
 model_user.go
 response.go
+test/api_assets_test.go
 test/api_auth_test.go
 test/api_user_test.go
 utils.go

@@ -4,6 +4,8 @@ README.md
 api/openapi.yaml
 go.mod
 go/api.go
+go/api_assets.go
+go/api_assets_service.go
 go/api_auth.go
 go/api_auth_service.go
 go/api_user.go

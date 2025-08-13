@@ -7,9 +7,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   version: 0.0.1
-tags:
-  - name: user
-    description: Operations for base user's data
+
 paths:
   /v1/authorize:
     post:
@@ -53,6 +51,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+
+  /v1/assets/{path}:
+    get:
+      tags:
+        - assets
+      summary: return asset by path
+      operationId: getAsset
+      parameters:
+        - name: path
+          in: path
+          description: path to asset
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        "200":
+          description: return asset
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Asset not found
 
 security:
   - BearerAuth: []

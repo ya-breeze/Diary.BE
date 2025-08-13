@@ -26,8 +26,9 @@ import (
 )
 
 type CustomControllers struct {
-	AuthAPIService AuthAPIService
-	UserAPIService UserAPIService
+	AssetsAPIService AssetsAPIService
+	AuthAPIService   AuthAPIService
+	UserAPIService   UserAPIService
 }
 
 func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
@@ -37,6 +38,12 @@ func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
 		return nil, nil, fmt.Errorf("Failed to listen: %w", err)
 	}
 	logger.Info(fmt.Sprintf("Listening at port %d...", listener.Addr().(*net.TCPAddr).Port))
+
+	AssetsAPIService := NewAssetsAPIService()
+	if controllers.AssetsAPIService != nil {
+		AssetsAPIService = controllers.AssetsAPIService
+	}
+	AssetsAPIController := NewAssetsAPIController(AssetsAPIService)
 
 	AuthAPIService := NewAuthAPIService()
 	if controllers.AuthAPIService != nil {
@@ -50,7 +57,7 @@ func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
 	}
 	UserAPIController := NewUserAPIController(UserAPIService)
 
-	routers := append(extraRouters, AuthAPIController, UserAPIController)
+	routers := append(extraRouters, AssetsAPIController, AuthAPIController, UserAPIController)
 	router := NewRouter(routers...)
 
 	router.Use(middlewares...)
