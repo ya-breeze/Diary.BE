@@ -80,6 +80,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AssetsAPI* | [**GetAsset**](docs/AssetsAPI.md#getasset) | **Get** /v1/assets | return asset by path
 *AuthAPI* | [**Authorize**](docs/AuthAPI.md#authorize) | **Post** /v1/authorize | validate user/password and return token
+*ItemsAPI* | [**GetItems**](docs/ItemsAPI.md#getitems) | **Get** /v1/items | get diary items
 *UserAPI* | [**GetUser**](docs/UserAPI.md#getuser) | **Get** /v1/user | return user object
 
 
@@ -88,6 +89,7 @@ Class | Method | HTTP request | Description
  - [AuthData](docs/AuthData.md)
  - [Authorize200Response](docs/Authorize200Response.md)
  - [Entity](docs/Entity.md)
+ - [ItemsResponse](docs/ItemsResponse.md)
  - [User](docs/User.md)
 
 

@@ -8,6 +8,8 @@ go/api_assets.go
 go/api_assets_service.go
 go/api_auth.go
 go/api_auth_service.go
+go/api_items.go
+go/api_items_service.go
 go/api_user.go
 go/api_user_service.go
 go/error.go
@@ -17,6 +19,7 @@ go/logger.go
 go/model_auth_data.go
 go/model_authorize_200_response.go
 go/model_entity.go
+go/model_items_response.go
 go/model_user.go
 go/routers.go
 main.go

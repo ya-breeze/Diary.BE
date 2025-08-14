@@ -17,24 +17,26 @@ import (
 )
 
 type WebAppRouter struct {
-	commit      string
-	logger      *slog.Logger
-	cfg         *config.Config
-	db          database.Storage
-	cookies     *sessions.CookieStore
-	authService goserver.AuthAPIService
+	commit       string
+	logger       *slog.Logger
+	cfg          *config.Config
+	db           database.Storage
+	cookies      *sessions.CookieStore
+	authService  goserver.AuthAPIService
+	itemsService goserver.ItemsAPIService
 }
 
 func NewWebAppRouter(
-	commit string, logger *slog.Logger, cfg *config.Config, db database.Storage, authService goserver.AuthAPIService,
+	controllers goserver.CustomControllers, commit string, logger *slog.Logger, cfg *config.Config, db database.Storage,
 ) *WebAppRouter {
 	return &WebAppRouter{
-		commit:      commit,
-		logger:      logger,
-		cfg:         cfg,
-		db:          db,
-		cookies:     sessions.NewCookieStore([]byte("SESSION_KEY")),
-		authService: authService,
+		commit:       commit,
+		logger:       logger,
+		cfg:          cfg,
+		db:           db,
+		cookies:      sessions.NewCookieStore([]byte("SESSION_KEY")),
+		authService:  controllers.AuthAPIService,
+		itemsService: controllers.ItemsAPIService,
 	}
 }
 

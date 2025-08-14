@@ -77,6 +77,33 @@ paths:
         "404":
           description: Asset not found
 
+  /v1/items:
+    get:
+      tags:
+        - items
+      summary: get diary items
+      operationId: getItems
+      parameters:
+        - name: date
+          in: query
+          description: filter items by date (optional)
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2024-01-15"
+      responses:
+        "200":
+          description: diary items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ItemsResponse"
+        "400":
+          description: Invalid date format
+        "404":
+          description: No items found
+
 security:
   - BearerAuth: []
 
@@ -123,3 +150,36 @@ components:
         - startDate
       allOf:
         - $ref: "#/components/schemas/Entity"
+
+    ItemsResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2024-01-15"
+        title:
+          type: string
+          example: "My diary entry"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["personal", "work", "travel"]
+        body:
+          type: string
+          example: "Today was a great day..."
+        previousDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-01-14"
+        nextDate:
+          type: string
+          format: date
+          nullable: true
+          example: "2024-01-16"
+      required:
+        - date
+        - title
+        - body

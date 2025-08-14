@@ -53,6 +53,8 @@ type APIClient struct {
 
 	AuthAPI *AuthAPIService
 
+	ItemsAPI *ItemsAPIService
+
 	UserAPI *UserAPIService
 }
 
@@ -74,6 +76,7 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 	// API Services
 	c.AssetsAPI = (*AssetsAPIService)(&c.common)
 	c.AuthAPI = (*AuthAPIService)(&c.common)
+	c.ItemsAPI = (*ItemsAPIService)(&c.common)
 	c.UserAPI = (*UserAPIService)(&c.common)
 
 	return c

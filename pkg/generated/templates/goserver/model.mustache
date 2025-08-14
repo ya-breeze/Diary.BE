@@ -78,12 +78,12 @@ type {{classname}} struct {
 
 type {{classname}}Interface interface {
 {{#vars}}
-	Get{{name}}() {{dataType}}
+	Get{{name}}() {{#isNullable}}*{{/isNullable}}{{dataType}}
 {{/vars}}
 }
 
 {{#vars}}
-func (c *{{classname}}) Get{{name}}() {{dataType}} {
+func (c *{{classname}}) Get{{name}}() {{#isNullable}}*{{/isNullable}}{{dataType}} {
 	return c.{{name}}
 }
 {{/vars}}

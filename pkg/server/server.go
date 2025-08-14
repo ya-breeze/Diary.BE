@@ -48,11 +48,12 @@ func Server(logger *slog.Logger, cfg *config.Config) error {
 	return nil
 }
 
-func createControllers(logger *slog.Logger, cfg *config.Config, db database.Storage, authService goserver.AuthAPIService) goserver.CustomControllers {
+func createControllers(logger *slog.Logger, cfg *config.Config, db database.Storage) goserver.CustomControllers {
 	return goserver.CustomControllers{
-		AuthAPIService:   authService,
+		AuthAPIService:   api.NewAuthAPIService(logger, db, cfg),
 		UserAPIService:   api.NewUserAPIService(logger, db),
 		AssetsAPIService: api.NewAssetsAPIService(logger, cfg),
+		ItemsAPIService:  api.NewItemsAPIService(logger, db),
 	}
 }
 
@@ -97,12 +98,12 @@ func Serve(
 		logger.Info("No users defined in configuration")
 	}
 
-	// Create shared auth service
-	authService := api.NewAuthAPIService(logger, storage, cfg)
+	// Create controllers
+	controllers := createControllers(logger, cfg, storage)
 
 	return goserver.Serve(ctx, logger, cfg,
-		createControllers(logger, cfg, storage, authService),
-		[]goserver.Router{webapp.NewWebAppRouter(commit, logger, cfg, storage, authService)},
+		controllers,
+		[]goserver.Router{webapp.NewWebAppRouter(controllers, commit, logger, cfg, storage)},
 		createMiddlewares(logger, cfg)...)
 }
 
