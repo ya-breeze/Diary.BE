@@ -2,6 +2,7 @@ package api_test
 
 import (
 	"context"
+	"encoding/base64"
 	"log/slog"
 	"os"
 
@@ -45,7 +46,7 @@ var _ = Describe("AuthAPIService", func() {
 		// Create a test user
 		hashedPassBytes, err := auth.HashPassword([]byte(testPass))
 		Expect(err).ToNot(HaveOccurred())
-		hashedPass = string(hashedPassBytes)
+		hashedPass = base64.StdEncoding.EncodeToString(hashedPassBytes)
 
 		_, err = storage.CreateUser(testEmail, hashedPass)
 		Expect(err).ToNot(HaveOccurred())

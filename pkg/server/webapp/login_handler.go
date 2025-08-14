@@ -1,7 +1,6 @@
 package webapp
 
 import (
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"html/template"
@@ -9,10 +8,10 @@ import (
 	"time"
 
 	"github.com/ya-breeze/diary.be/pkg/auth"
+	"github.com/ya-breeze/diary.be/pkg/generated/goserver"
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
-//nolint:cyclop,funlen // refactor
 func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -27,37 +26,35 @@ func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// check that user exists in DB
-	userID, err := r.db.GetUserID(username)
-	if err != nil {
-		r.logger.Warn("failed to get user ID", "username", username)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	// Use AuthAPIService to authenticate user
+	authData := goserver.AuthData{
+		Email:    username,
+		Password: password,
 	}
-	user, err := r.db.GetUser(userID)
+
+	response, err := r.authService.Authorize(req.Context(), authData)
 	if err != nil {
-		r.logger.Warn("failed to get user", "ID", userID)
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	if user == nil {
-		r.logger.Warn("user not found", "ID", userID)
-		http.Error(w, "User not found", http.StatusBadRequest)
+		r.logger.Error("Authentication failed", "username", username, "error", err)
+		http.Error(w, "Authentication failed", http.StatusInternalServerError)
 		return
 	}
 
-	// check that password is correct and create JWT token
-	hashed, err := base64.StdEncoding.DecodeString(user.HashedPassword)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Check if authentication was successful
+	if response.Code != 200 {
+		r.logger.Warn("Authentication failed", "username", username, "status", response.Code)
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		return
 	}
-	if !auth.CheckPasswordHash([]byte(password), hashed) {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+
+	// Extract token from response
+	authResponse, ok := response.Body.(goserver.Authorize200Response)
+	if !ok {
+		r.logger.Error("Invalid response type from auth service", "username", username)
+		http.Error(w, "Authentication failed", http.StatusInternalServerError)
+		return
 	}
-	token, err := auth.CreateJWT(userID, r.cfg.Issuer, r.cfg.JWTSecret)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+
+	token := authResponse.Token
 
 	// set JWT token in cookie
 	session, err := r.cookies.Get(req, r.cfg.CookieName)

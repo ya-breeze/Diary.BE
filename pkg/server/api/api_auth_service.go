@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"log/slog"
 
@@ -51,8 +52,14 @@ func (s *AuthAPIServiceImpl) Authorize(ctx context.Context, authData goserver.Au
 		return goserver.Response(500, nil), nil
 	}
 
-	// Verify password
-	if !auth.CheckPasswordHash([]byte(authData.Password), []byte(user.HashedPassword)) {
+	// Verify password - decode base64 encoded hash from database
+	hashedPassword, err := base64.StdEncoding.DecodeString(user.HashedPassword)
+	if err != nil {
+		s.logger.Error("Failed to decode hashed password", "email", authData.Email, "error", err)
+		return goserver.Response(500, nil), nil
+	}
+
+	if !auth.CheckPasswordHash([]byte(authData.Password), hashedPassword) {
 		s.logger.Warn("Invalid password", "email", authData.Email)
 		return goserver.Response(401, nil), nil
 	}
