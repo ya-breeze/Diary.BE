@@ -19,6 +19,8 @@ import (
 )
 
 // SharedTestSetup contains all the shared test infrastructure
+//
+//nolint:containedctx
 type SharedTestSetup struct {
 	Logger     *slog.Logger
 	Cfg        *config.Config
@@ -84,6 +86,7 @@ func SetupTestEnvironment() *SharedTestSetup {
 
 	// Wait for server to be ready by polling the authorize endpoint
 	Eventually(func() bool {
+		//nolint
 		resp, err := http.Post(setup.ServerAddr+"/v1/authorize", "application/json", nil)
 		if err != nil {
 			return false
@@ -130,6 +133,7 @@ func (setup *SharedTestSetup) LoginAndGetToken() string {
 
 	authResponse, httpResponse, err := setup.APIClient.AuthAPI.Authorize(context.Background()).AuthData(authData).Execute()
 	Expect(err).ToNot(HaveOccurred())
+	defer httpResponse.Body.Close()
 	Expect(httpResponse.StatusCode).To(Equal(http.StatusOK))
 	Expect(authResponse.Token).ToNot(BeEmpty())
 

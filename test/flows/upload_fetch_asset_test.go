@@ -1,3 +1,4 @@
+//nolint:lll // test code
 package flows_test
 
 import (
@@ -30,7 +31,7 @@ var _ = Describe("Upload and Fetch Asset Flow", func() {
 
 				// Step 2: Create a test asset file to upload
 				testAssetContent := []byte("test image content for upload")
-				
+
 				// Create a temporary file for upload
 				tempFile, err := os.CreateTemp("", "test_upload_*.jpg")
 				Expect(err).ToNot(HaveOccurred())
@@ -46,12 +47,12 @@ var _ = Describe("Upload and Fetch Asset Flow", func() {
 
 				// Step 3: Upload the asset via API
 				uploadResponse, httpResponse, err := setup.APIClient.AssetsAPI.UploadAsset(context.Background()).Asset(tempFile).Execute()
-				
+
 				// We expect this to succeed with 200
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResponse.StatusCode).To(Equal(http.StatusOK))
 				Expect(uploadResponse).ToNot(BeEmpty())
-				
+
 				// The response should be the filename of the uploaded asset
 				uploadedFilename := strings.TrimSpace(uploadResponse)
 				Expect(uploadedFilename).To(HaveSuffix(".jpg"))
@@ -76,7 +77,7 @@ var _ = Describe("Upload and Fetch Asset Flow", func() {
 			It("should receive 401 unauthorized", func() {
 				// Create a test asset file to upload
 				testAssetContent := []byte("test image content for upload")
-				
+
 				// Create a temporary file for upload
 				tempFile, err := os.CreateTemp("", "test_upload_*.jpg")
 				Expect(err).ToNot(HaveOccurred())

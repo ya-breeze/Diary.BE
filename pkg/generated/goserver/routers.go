@@ -66,6 +66,11 @@ func NewRouter(routers ...Router) *mux.Router {
 	return router
 }
 
+// PlainTextResponse is a wrapper for plain text responses
+type PlainTextResponse struct {
+	Text string
+}
+
 // EncodeJSONResponse uses the json encoder to write an interface to the http response with an optional status code
 func EncodeJSONResponse(i interface{}, status *int, w http.ResponseWriter) error {
 	wHeader := w.Header()
@@ -86,6 +91,20 @@ func EncodeJSONResponse(i interface{}, status *int, w http.ResponseWriter) error
 		_, err = w.Write(data)
 		return err
 	}
+
+	// Handle plain text responses
+	plainText, ok := i.(PlainTextResponse)
+	if ok {
+		wHeader.Set("Content-Type", "text/plain; charset=UTF-8")
+		if status != nil {
+			w.WriteHeader(*status)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+		_, err := w.Write([]byte(plainText.Text))
+		return err
+	}
+
 	wHeader.Set("Content-Type", "application/json; charset=UTF-8")
 
 	if status != nil {
@@ -147,10 +166,16 @@ func readFileHeaderToTempFile(fileHeader *multipart.FileHeader) (*os.File, error
 		return nil, err
 	}
 
-	defer file.Close()
-
 	_, err = io.Copy(file, formFile)
 	if err != nil {
+		file.Close()
+		return nil, err
+	}
+
+	// Seek back to the beginning of the file so it can be read by the caller
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		file.Close()
 		return nil, err
 	}
 

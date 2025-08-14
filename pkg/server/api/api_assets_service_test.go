@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/ya-breeze/diary.be/pkg/config"
+	"github.com/ya-breeze/diary.be/pkg/generated/goserver"
 	"github.com/ya-breeze/diary.be/pkg/server/api"
 	"github.com/ya-breeze/diary.be/pkg/server/common"
 )
@@ -232,10 +233,11 @@ var _ = Describe("AssetsAPIService", func() {
 
 					Expect(err).NotTo(HaveOccurred())
 					Expect(response.Code).To(Equal(http.StatusOK))
-					Expect(response.Body).To(BeAssignableToTypeOf(""))
+					Expect(response.Body).To(BeAssignableToTypeOf(goserver.PlainTextResponse{}))
 
-					filename, ok := response.Body.(string)
-					Expect(ok).To(BeTrue(), "Response body should be a string filename")
+					plainTextResponse, ok := response.Body.(goserver.PlainTextResponse)
+					Expect(ok).To(BeTrue(), "Response body should be a PlainTextResponse")
+					filename := plainTextResponse.Text
 					Expect(filename).To(HaveSuffix(".jpg"))
 					Expect(strings.Contains(filename, "-")).To(BeTrue(), "Filename should contain UUID format")
 
@@ -281,8 +283,9 @@ var _ = Describe("AssetsAPIService", func() {
 					Expect(newUserDir).To(BeADirectory())
 
 					// Verify file was saved
-					filename, ok := response.Body.(string)
+					plainTextResponse, ok := response.Body.(goserver.PlainTextResponse)
 					Expect(ok).To(BeTrue())
+					filename := plainTextResponse.Text
 					savedFilePath := filepath.Join(newUserDir, filename)
 					Expect(savedFilePath).To(BeAnExistingFile())
 				})

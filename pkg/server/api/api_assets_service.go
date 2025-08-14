@@ -189,6 +189,6 @@ func (s *AssetsAPIServiceImpl) UploadAsset(ctx context.Context, asset *os.File) 
 
 	s.logger.Info("Asset uploaded successfully", "filename", filename, "userID", userID)
 
-	// Return the filename as the response body
-	return goserver.Response(http.StatusOK, filename), nil
+	// Return the filename as the response body using PlainTextResponse for text/plain content type
+	return goserver.Response(http.StatusOK, goserver.PlainTextResponse{Text: filename}), nil
 }
