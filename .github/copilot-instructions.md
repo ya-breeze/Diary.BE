@@ -123,19 +123,20 @@ Environment variables (see `make run` for examples):
 3. Make your changes
 4. **Test incrementally**: `make build && make test` after each change
 5. **Manual validation**: Start server and test affected functionality
-6. **Lint and format**: Run golangci-lint and gofumpt
+6. **Lint and format**: Run `make lint`
 7. **Final validation**: Complete authentication and web interface tests
 
 ### Adding New Features
-- Update `api/openapi.yaml` for API changes (but avoid regenerating code due to issues)
+- Update `api/openapi.yaml` for API changes
+- Run `HOST_PWD=$(pwd) make generate` to regenerate client/server code
 - Add tests in `test/flows/` for new functionality
 - Follow existing patterns in `pkg/server/api/` for handlers
 - Update database models in `pkg/database/models/` if needed
 
 ### Common File Patterns
 After changing API contracts:
+- Run `HOST_PWD=$(pwd) make generate` to regenerate client/server code
 - Check `pkg/server/api/` for handler implementations
 - Update `test/flows/` tests for new functionality
-- Review `pkg/generated/` for any manual fixes needed (avoid regeneration)
 
 Remember: This codebase uses Ginkgo/Gomega for testing, GORM for database operations, and Gorilla for HTTP routing.
