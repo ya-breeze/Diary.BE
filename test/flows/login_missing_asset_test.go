@@ -3,6 +3,7 @@ package flows_test
 import (
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -21,6 +22,11 @@ import (
 	"github.com/ya-breeze/diary.be/pkg/server"
 )
 
+// Helper to create cancellable context outside function literal
+func newCancellableContext() (context.Context, context.CancelFunc) {
+	return context.WithCancel(context.Background())
+}
+
 var _ = Describe("Login and Missing Asset Flow", func() {
 	var (
 		logger     *slog.Logger
@@ -34,6 +40,9 @@ var _ = Describe("Login and Missing Asset Flow", func() {
 		testPass   string
 		tempDir    string
 	)
+
+	// Create context outside BeforeEach to avoid fatcontext linting issue
+	ctx, cancel = newCancellableContext()
 
 	BeforeEach(func() {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -66,11 +75,12 @@ var _ = Describe("Login and Missing Asset Flow", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Start test server
-		ctx, cancel = context.WithCancel(context.Background())
 		addr, _, err := server.Serve(ctx, logger, storage, cfg)
 		Expect(err).ToNot(HaveOccurred())
 
-		serverAddr = fmt.Sprintf("http://localhost:%d", addr.(*net.TCPAddr).Port)
+		tcpAddr, ok := addr.(*net.TCPAddr)
+		Expect(ok).To(BeTrue(), "Failed to cast address to *net.TCPAddr")
+		serverAddr = fmt.Sprintf("http://localhost:%d", tcpAddr.Port)
 		logger.Info("Test server started", "address", serverAddr)
 
 		// Wait for server to be ready by polling the authorize endpoint
@@ -137,7 +147,8 @@ var _ = Describe("Login and Missing Asset Flow", func() {
 				Expect(httpResponse.StatusCode).To(Equal(http.StatusNotFound))
 
 				// Verify the error is a GenericOpenAPIError with 404 status
-				if openAPIErr, ok := err.(*goclient.GenericOpenAPIError); ok {
+				var openAPIErr *goclient.GenericOpenAPIError
+				if errors.As(err, &openAPIErr) {
 					Expect(openAPIErr.Error()).To(ContainSubstring("404"))
 				}
 			})
@@ -195,17 +206,17 @@ var _ = Describe("Login and Missing Asset Flow", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				userAssetDir := filepath.Join(tempDir, userID)
-				err = os.MkdirAll(userAssetDir, 0755)
+				err = os.MkdirAll(userAssetDir, 0o755)
 				Expect(err).ToNot(HaveOccurred())
 
 				testAssetPath := "images/photos/test-photo.jpg"
 				testAssetFullPath := filepath.Join(userAssetDir, testAssetPath)
 				testAssetDir := filepath.Dir(testAssetFullPath)
-				err = os.MkdirAll(testAssetDir, 0755)
+				err = os.MkdirAll(testAssetDir, 0o755)
 				Expect(err).ToNot(HaveOccurred())
 
 				testAssetContent := []byte("fake image content for testing")
-				err = os.WriteFile(testAssetFullPath, testAssetContent, 0644)
+				err = os.WriteFile(testAssetFullPath, testAssetContent, 0o600)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Step 4: Fetch the existing asset

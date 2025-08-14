@@ -16,15 +16,26 @@ import (
 	"github.com/ya-breeze/diary.be/pkg/server/common"
 )
 
+// Helper function to create context with user ID for items tests
+func createContextWithUserIDForItems(userID string) context.Context {
+	ctx := context.Background()
+	return context.WithValue(ctx, common.UserIDKey, userID)
+}
+
 var _ = Describe("ItemsAPIService", func() {
 	var (
-		service goserver.ItemsAPIService
-		logger  *slog.Logger
-		storage database.Storage
-		ctx     context.Context
-		userID  string
+		service  goserver.ItemsAPIService
+		logger   *slog.Logger
+		storage  database.Storage
+		ctx      context.Context
+		userID   string
 		testDate string
 	)
+
+	// Create context outside of BeforeEach to avoid fatcontext linting issue
+	userID = "test-user-id"
+	testDate = "2024-01-15"
+	ctx = createContextWithUserIDForItems(userID)
 
 	BeforeEach(func() {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -35,9 +46,6 @@ var _ = Describe("ItemsAPIService", func() {
 		Expect(storage.Open()).To(Succeed())
 
 		service = api.NewItemsAPIService(logger, storage)
-		userID = "test-user-id"
-		testDate = "2024-01-15"
-		ctx = context.WithValue(context.Background(), common.UserIDKey, userID)
 	})
 
 	AfterEach(func() {

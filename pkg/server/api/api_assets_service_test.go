@@ -15,6 +15,12 @@ import (
 	"github.com/ya-breeze/diary.be/pkg/server/common"
 )
 
+// Helper function to create context with user ID for assets tests
+func createContextWithUserIDForAssets(userID string) context.Context {
+	ctx := context.Background()
+	return context.WithValue(ctx, common.UserIDKey, userID)
+}
+
 var _ = Describe("AssetsAPIService", func() {
 	var (
 		service  *api.AssetsAPIServiceImpl
@@ -25,6 +31,10 @@ var _ = Describe("AssetsAPIService", func() {
 		testFile string
 		ctx      context.Context
 	)
+
+	// Create context outside of BeforeEach to avoid fatcontext linting issue
+	userID = "test-user-123"
+	ctx = createContextWithUserIDForAssets(userID)
 
 	BeforeEach(func() {
 		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
@@ -37,19 +47,19 @@ var _ = Describe("AssetsAPIService", func() {
 			AssetPath: tempDir,
 		}
 
-		userID = "test-user-123"
-		ctx = context.WithValue(context.Background(), common.UserIDKey, userID)
-
 		// Create user directory and test file
 		userDir := filepath.Join(tempDir, userID)
-		err = os.MkdirAll(userDir, 0755)
+		err = os.MkdirAll(userDir, 0o755)
 		Expect(err).NotTo(HaveOccurred())
 
 		testFile = filepath.Join(userDir, "test-image.jpg")
-		err = os.WriteFile(testFile, []byte("fake image content"), 0644)
+		err = os.WriteFile(testFile, []byte("fake image content"), 0o600)
 		Expect(err).NotTo(HaveOccurred())
 
-		service = api.NewAssetsAPIService(logger, cfg).(*api.AssetsAPIServiceImpl)
+		serviceInterface := api.NewAssetsAPIService(logger, cfg)
+		var ok bool
+		service, ok = serviceInterface.(*api.AssetsAPIServiceImpl)
+		Expect(ok).To(BeTrue(), "Failed to cast service to AssetsAPIServiceImpl")
 	})
 
 	AfterEach(func() {
@@ -87,11 +97,11 @@ var _ = Describe("AssetsAPIService", func() {
 			BeforeEach(func() {
 				// Create a subdirectory with a file
 				subDir := filepath.Join(tempDir, userID, "images")
-				err := os.MkdirAll(subDir, 0755)
+				err := os.MkdirAll(subDir, 0o755)
 				Expect(err).NotTo(HaveOccurred())
 
 				subFile := filepath.Join(subDir, "photo.jpg")
-				err = os.WriteFile(subFile, []byte("photo content"), 0644)
+				err = os.WriteFile(subFile, []byte("photo content"), 0o600)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -103,7 +113,8 @@ var _ = Describe("AssetsAPIService", func() {
 				Expect(response.Body).To(BeAssignableToTypeOf(&os.File{}))
 
 				// Verify we can read from the file
-				file := response.Body.(*os.File)
+				file, ok := response.Body.(*os.File)
+				Expect(ok).To(BeTrue(), "Failed to cast response body to *os.File")
 				defer file.Close()
 
 				content, err := os.ReadFile(file.Name())
@@ -114,11 +125,11 @@ var _ = Describe("AssetsAPIService", func() {
 			It("should handle nested subdirectories", func() {
 				// Create deeper nesting
 				deepDir := filepath.Join(tempDir, userID, "docs", "2023", "reports")
-				err := os.MkdirAll(deepDir, 0755)
+				err := os.MkdirAll(deepDir, 0o755)
 				Expect(err).NotTo(HaveOccurred())
 
 				deepFile := filepath.Join(deepDir, "report.pdf")
-				err = os.WriteFile(deepFile, []byte("report content"), 0644)
+				err = os.WriteFile(deepFile, []byte("report content"), 0o600)
 				Expect(err).NotTo(HaveOccurred())
 
 				response, err := service.GetAsset(ctx, "docs/2023/reports/report.pdf")
@@ -146,7 +157,8 @@ var _ = Describe("AssetsAPIService", func() {
 				Expect(response.Body).To(BeAssignableToTypeOf(&os.File{}))
 
 				// Verify we can read from the file
-				file := response.Body.(*os.File)
+				file, ok := response.Body.(*os.File)
+				Expect(ok).To(BeTrue(), "Failed to cast response body to *os.File")
 				defer file.Close()
 
 				content, err := os.ReadFile(file.Name())
@@ -159,7 +171,7 @@ var _ = Describe("AssetsAPIService", func() {
 			It("should return bad request", func() {
 				// Create a subdirectory
 				subDir := filepath.Join(tempDir, userID, "emptydir")
-				err := os.MkdirAll(subDir, 0755)
+				err := os.MkdirAll(subDir, 0o755)
 				Expect(err).NotTo(HaveOccurred())
 
 				response, err := service.GetAsset(ctx, "emptydir")
