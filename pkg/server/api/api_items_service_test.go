@@ -22,6 +22,36 @@ func createContextWithUserIDForItems(userID string) context.Context {
 	return context.WithValue(ctx, common.UserIDKey, userID)
 }
 
+// Helper function to assert successful PUT response and database save
+func assertSuccessfulPutResponse(
+	response goserver.ImplResponse,
+	expectedTitle, expectedBody string,
+	expectedTags []string,
+	expectedDate string,
+) {
+	Expect(response.Code).To(Equal(200))
+
+	itemsResponse, ok := response.Body.(goserver.ItemsResponse)
+	Expect(ok).To(BeTrue())
+	Expect(itemsResponse.Date).To(Equal(expectedDate))
+	Expect(itemsResponse.Title).To(Equal(expectedTitle))
+	Expect(itemsResponse.Body).To(Equal(expectedBody))
+	Expect(itemsResponse.Tags).To(Equal(expectedTags))
+}
+
+// Helper function to verify item was saved to database
+func verifyItemInDatabase(
+	storage database.Storage,
+	userID, expectedDate, expectedTitle, expectedBody string,
+	expectedTags []string,
+) {
+	savedItem, err := storage.GetItem(userID, expectedDate)
+	Expect(err).ToNot(HaveOccurred())
+	Expect(savedItem.Title).To(Equal(expectedTitle))
+	Expect(savedItem.Body).To(Equal(expectedBody))
+	Expect(savedItem.Tags).To(Equal(models.StringList(expectedTags)))
+}
+
 var _ = Describe("ItemsAPIService", func() {
 	var (
 		service  goserver.ItemsAPIService
@@ -138,6 +168,112 @@ var _ = Describe("ItemsAPIService", func() {
 
 			It("should include previous and next dates", func() {
 				response, err := service.GetItems(ctx, testDate)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsResponse, ok := response.Body.(goserver.ItemsResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsResponse.Date).To(Equal(testDate))
+				Expect(itemsResponse.PreviousDate).ToNot(BeNil())
+				Expect(*itemsResponse.PreviousDate).To(Equal("2024-01-14"))
+				Expect(itemsResponse.NextDate).ToNot(BeNil())
+				Expect(*itemsResponse.NextDate).To(Equal("2024-01-16"))
+			})
+		})
+	})
+
+	Describe("PutItems", func() {
+		Context("when no user ID in context", func() {
+			It("should return 401 unauthorized", func() {
+				emptyCtx := context.Background()
+				request := goserver.ItemsRequest{
+					Date:  testDate,
+					Title: "Test Title",
+					Body:  "Test Body",
+					Tags:  []string{"tag1", "tag2"},
+				}
+				response, err := service.PutItems(emptyCtx, request)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(401))
+			})
+		})
+
+		Context("when creating a new item", func() {
+			It("should create and return the item with 200 status", func() {
+				request := goserver.ItemsRequest{
+					Date:  testDate,
+					Title: "New Test Title",
+					Body:  "New Test Body",
+					Tags:  []string{"new", "test"},
+				}
+
+				response, err := service.PutItems(ctx, request)
+				Expect(err).ToNot(HaveOccurred())
+
+				assertSuccessfulPutResponse(response, "New Test Title", "New Test Body", []string{"new", "test"}, testDate)
+				verifyItemInDatabase(storage, userID, testDate, "New Test Title", "New Test Body", []string{"new", "test"})
+			})
+		})
+
+		Context("when updating an existing item", func() {
+			BeforeEach(func() {
+				// Create an initial item
+				initialItem := &models.Item{
+					UserID: userID,
+					Date:   testDate,
+					Title:  "Original Title",
+					Body:   "Original Body",
+					Tags:   models.StringList{"original"},
+				}
+				Expect(storage.PutItem(userID, initialItem)).To(Succeed())
+			})
+
+			It("should update and return the item with 200 status", func() {
+				request := goserver.ItemsRequest{
+					Date:  testDate,
+					Title: "Updated Title",
+					Body:  "Updated Body",
+					Tags:  []string{"updated", "modified"},
+				}
+
+				response, err := service.PutItems(ctx, request)
+				Expect(err).ToNot(HaveOccurred())
+
+				assertSuccessfulPutResponse(response, "Updated Title", "Updated Body", []string{"updated", "modified"}, testDate)
+				verifyItemInDatabase(storage, userID, testDate, "Updated Title", "Updated Body", []string{"updated", "modified"})
+			})
+		})
+
+		Context("when saving item with navigation dates", func() {
+			BeforeEach(func() {
+				// Create previous item
+				prevItem := &models.Item{
+					UserID: userID,
+					Date:   "2024-01-14",
+					Title:  "Previous Item",
+					Body:   "Previous content",
+				}
+				Expect(storage.PutItem(userID, prevItem)).To(Succeed())
+
+				// Create next item
+				nextItem := &models.Item{
+					UserID: userID,
+					Date:   "2024-01-16",
+					Title:  "Next Item",
+					Body:   "Next content",
+				}
+				Expect(storage.PutItem(userID, nextItem)).To(Succeed())
+			})
+
+			It("should include previous and next dates in response", func() {
+				request := goserver.ItemsRequest{
+					Date:  testDate,
+					Title: "Current Item",
+					Body:  "Current content",
+					Tags:  []string{"current"},
+				}
+
+				response, err := service.PutItems(ctx, request)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(response.Code).To(Equal(200))
 
