@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strings"
 
 	"github.com/ya-breeze/diary.be/pkg/database"
 	"github.com/ya-breeze/diary.be/pkg/database/models"
@@ -81,13 +82,23 @@ func (s *ItemsAPIServiceImpl) PutItems(
 
 	s.logger.Info("Saving item", "userID", userID, "date", itemsRequest.Date)
 
+	// Filter tags: trim spaces and skip empty values
+	filteredTags := make([]string, 0, len(itemsRequest.Tags))
+	for _, t := range itemsRequest.Tags {
+		t = strings.TrimSpace(t)
+		if t == "" {
+			continue
+		}
+		filteredTags = append(filteredTags, t)
+	}
+
 	// Convert request to database model
 	item := &models.Item{
 		UserID: userID,
 		Date:   itemsRequest.Date,
 		Title:  itemsRequest.Title,
 		Body:   itemsRequest.Body,
-		Tags:   models.StringList(itemsRequest.Tags),
+		Tags:   models.StringList(filteredTags),
 	}
 
 	// Save the item to database
