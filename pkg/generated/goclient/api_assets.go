@@ -18,7 +18,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 )
 
 // AssetsAPIService AssetsAPI service
@@ -27,7 +26,13 @@ type AssetsAPIService service
 type ApiGetAssetRequest struct {
 	ctx        context.Context
 	ApiService *AssetsAPIService
-	path       string
+	path       *string
+}
+
+// relative path to asset file
+func (r ApiGetAssetRequest) Path(path string) ApiGetAssetRequest {
+	r.path = &path
+	return r
 }
 
 func (r ApiGetAssetRequest) Execute() (*os.File, *http.Response, error) {
@@ -38,14 +43,12 @@ func (r ApiGetAssetRequest) Execute() (*os.File, *http.Response, error) {
 GetAsset return asset by path
 
 	@param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-	@param path path to asset
 	@return ApiGetAssetRequest
 */
-func (a *AssetsAPIService) GetAsset(ctx context.Context, path string) ApiGetAssetRequest {
+func (a *AssetsAPIService) GetAsset(ctx context.Context) ApiGetAssetRequest {
 	return ApiGetAssetRequest{
 		ApiService: a,
 		ctx:        ctx,
-		path:       path,
 	}
 }
 
@@ -65,13 +68,16 @@ func (a *AssetsAPIService) GetAssetExecute(r ApiGetAssetRequest) (*os.File, *htt
 		return localVarReturnValue, nil, &GenericOpenAPIError{error: err.Error()}
 	}
 
-	localVarPath := localBasePath + "/v1/assets/{path}"
-	localVarPath = strings.Replace(localVarPath, "{"+"path"+"}", url.PathEscape(parameterValueToString(r.path, "path")), -1)
+	localVarPath := localBasePath + "/v1/assets"
 
 	localVarHeaderParams := make(map[string]string)
 	localVarQueryParams := url.Values{}
 	localVarFormParams := url.Values{}
+	if r.path == nil {
+		return localVarReturnValue, nil, reportError("path is required and must be specified")
+	}
 
+	parameterAddToHeaderOrQuery(localVarQueryParams, "path", r.path, "")
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}
 

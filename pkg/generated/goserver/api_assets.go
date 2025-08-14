@@ -14,8 +14,6 @@ package goserver
 import (
 	"net/http"
 	"strings"
-
-	"github.com/gorilla/mux"
 )
 
 // AssetsAPIController binds http requests to an api service and writes the service results to the http response
@@ -53,7 +51,7 @@ func (c *AssetsAPIController) Routes() Routes {
 	return Routes{
 		"GetAsset": Route{
 			strings.ToUpper("Get"),
-			"/v1/assets/{path}",
+			"/v1/assets",
 			c.GetAsset,
 		},
 	}
@@ -61,10 +59,18 @@ func (c *AssetsAPIController) Routes() Routes {
 
 // GetAsset - return asset by path
 func (c *AssetsAPIController) GetAsset(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	pathParam := params["path"]
-	if pathParam == "" {
-		c.errorHandler(w, r, &RequiredError{"path"}, nil)
+	query, err := parseQuery(r.URL.RawQuery)
+	if err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	var pathParam string
+	if query.Has("path") {
+		param := query.Get("path")
+
+		pathParam = param
+	} else {
+		c.errorHandler(w, r, &RequiredError{Field: "path"}, nil)
 		return
 	}
 	result, err := c.service.GetAsset(r.Context(), pathParam)

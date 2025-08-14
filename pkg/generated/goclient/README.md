@@ -78,7 +78,7 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*AssetsAPI* | [**GetAsset**](docs/AssetsAPI.md#getasset) | **Get** /v1/assets/{path} | return asset by path
+*AssetsAPI* | [**GetAsset**](docs/AssetsAPI.md#getasset) | **Get** /v1/assets | return asset by path
 *AuthAPI* | [**Authorize**](docs/AuthAPI.md#authorize) | **Post** /v1/authorize | validate user/password and return token
 *UserAPI* | [**GetUser**](docs/UserAPI.md#getuser) | **Get** /v1/user | return user object
 

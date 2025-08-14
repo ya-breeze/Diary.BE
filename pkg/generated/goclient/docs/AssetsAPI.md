@@ -4,13 +4,13 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**GetAsset**](AssetsAPI.md#GetAsset) | **Get** /v1/assets/{path} | return asset by path
+[**GetAsset**](AssetsAPI.md#GetAsset) | **Get** /v1/assets | return asset by path
 
 
 
 ## GetAsset
 
-> *os.File GetAsset(ctx, path).Execute()
+> *os.File GetAsset(ctx).Path(path).Execute()
 
 return asset by path
 
@@ -27,11 +27,11 @@ import (
 )
 
 func main() {
-	path := "path_example" // string | path to asset
+	path := "images/photos/vacation.jpg" // string | relative path to asset file
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.AssetsAPI.GetAsset(context.Background(), path).Execute()
+	resp, r, err := apiClient.AssetsAPI.GetAsset(context.Background()).Path(path).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `AssetsAPI.GetAsset``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
@@ -44,10 +44,6 @@ func main() {
 ### Path Parameters
 
 
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
-**ctx** | **context.Context** | context for authentication, logging, cancellation, deadlines, tracing, etc.
-**path** | **string** | path to asset | 
 
 ### Other Parameters
 
@@ -56,7 +52,7 @@ Other parameters are passed through a pointer to a apiGetAssetRequest struct via
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
-
+ **path** | **string** | relative path to asset file | 
 
 ### Return type
 
