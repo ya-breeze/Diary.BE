@@ -14,6 +14,7 @@ package goserver
 import (
 	"context"
 	"net/http"
+	"os"
 )
 
 // AssetsAPIRouter defines the required methods for binding the api requests to a responses for the AssetsAPI
@@ -21,6 +22,7 @@ import (
 // pass the data to a AssetsAPIServicer to perform the required actions, then write the service results to the http response.
 type AssetsAPIRouter interface {
 	GetAsset(http.ResponseWriter, *http.Request)
+	UploadAsset(http.ResponseWriter, *http.Request)
 }
 
 // AuthAPIRouter defines the required methods for binding the api requests to a responses for the AuthAPI
@@ -50,6 +52,7 @@ type UserAPIRouter interface {
 // and updated with the logic required for the API.
 type AssetsAPIServicer interface {
 	GetAsset(context.Context, string) (ImplResponse, error)
+	UploadAsset(context.Context, *os.File) (ImplResponse, error)
 }
 
 // AuthAPIServicer defines the api actions for the AuthAPI service

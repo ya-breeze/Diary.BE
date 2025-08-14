@@ -2,12 +2,14 @@ package api
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/ya-breeze/diary.be/pkg/config"
 	"github.com/ya-breeze/diary.be/pkg/generated/goserver"
 	"github.com/ya-breeze/diary.be/pkg/server/common"
@@ -140,4 +142,53 @@ func (s *AssetsAPIServiceImpl) validateFileAccess(userAssetPath, userID string) 
 	}
 
 	return nil
+}
+
+// UploadAsset - upload an asset file
+func (s *AssetsAPIServiceImpl) UploadAsset(ctx context.Context, asset *os.File) (goserver.ImplResponse, error) {
+	// Get user ID from context (set by auth middleware)
+	userID, ok := ctx.Value(common.UserIDKey).(string)
+	if !ok {
+		s.logger.Error("Failed to get user ID from context")
+		return goserver.Response(http.StatusUnauthorized, nil), nil
+	}
+
+	// Validate that asset file is provided
+	if asset == nil {
+		s.logger.Warn("No asset file provided", "userID", userID)
+		return goserver.Response(http.StatusBadRequest, nil), nil
+	}
+	defer asset.Close()
+
+	// Create user asset directory if it doesn't exist
+	userAssetPath := filepath.Join(s.cfg.AssetPath, userID)
+	if err := os.MkdirAll(userAssetPath, 0o755); err != nil {
+		s.logger.Error("Failed to create user asset directory", "error", err, "path", userAssetPath, "userID", userID)
+		return goserver.Response(http.StatusInternalServerError, nil), nil
+	}
+
+	// Generate a unique filename for the uploaded asset
+	filename := uuid.New().String() + ".jpg"
+	filePath := filepath.Join(userAssetPath, filename)
+
+	s.logger.Info("Uploading asset", "filename", filename, "path", filePath, "userID", userID)
+
+	// Create the destination file
+	dst, err := os.Create(filePath)
+	if err != nil {
+		s.logger.Error("Failed to create destination file", "error", err, "path", filePath, "userID", userID)
+		return goserver.Response(http.StatusInternalServerError, nil), nil
+	}
+	defer dst.Close()
+
+	// Copy the uploaded file's data to the destination file
+	if _, err := io.Copy(dst, asset); err != nil {
+		s.logger.Error("Failed to copy asset data", "error", err, "userID", userID)
+		return goserver.Response(http.StatusInternalServerError, nil), nil
+	}
+
+	s.logger.Info("Asset uploaded successfully", "filename", filename, "userID", userID)
+
+	// Return the filename as the response body
+	return goserver.Response(http.StatusOK, filename), nil
 }
