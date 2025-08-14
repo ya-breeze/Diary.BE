@@ -50,7 +50,7 @@ func Server(logger *slog.Logger, cfg *config.Config) error {
 
 func createControllers(logger *slog.Logger, cfg *config.Config, db database.Storage) goserver.CustomControllers {
 	return goserver.CustomControllers{
-		// AuthAPIService:   api.NewAuthAPIService(logger, db),
+		AuthAPIService:   api.NewAuthAPIService(logger, db, cfg),
 		UserAPIService:   api.NewUserAPIService(logger, db),
 		AssetsAPIService: api.NewAssetsAPIService(logger, cfg),
 	}
