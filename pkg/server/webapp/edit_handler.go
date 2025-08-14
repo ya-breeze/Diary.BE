@@ -1,12 +1,15 @@
 package webapp
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/ya-breeze/diary.be/pkg/database"
 	"github.com/ya-breeze/diary.be/pkg/database/models"
+	"github.com/ya-breeze/diary.be/pkg/generated/goserver"
+	"github.com/ya-breeze/diary.be/pkg/server/common"
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
 
@@ -72,19 +75,32 @@ func (r *WebAppRouter) saveHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Date is required", http.StatusBadRequest)
 		return
 	}
-	item := &models.Item{
-		UserID: userID,
-		Date:   date,
-		Title:  req.FormValue("title"),
-		Body:   req.FormValue("body"),
-		Tags:   strings.Split(req.FormValue("tags"), ","),
+
+	// Build the API request and call the Items API service instead of writing to DB directly
+	itemsRequest := goserver.ItemsRequest{
+		Date:  date,
+		Title: req.FormValue("title"),
+		Body:  req.FormValue("body"),
+		Tags:  strings.Split(req.FormValue("tags"), ","),
 	}
 
-	if err := r.db.PutItem(userID, item); err != nil {
-		r.logger.Error("Failed to save item", "error", err, "item", item)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// Ensure the service can read the user ID from context (the API service expects it there)
+	ctx := context.WithValue(req.Context(), common.UserIDKey, userID)
+
+	implResp, svcErr := r.itemsService.PutItems(ctx, itemsRequest)
+	if svcErr != nil {
+		r.logger.Error("Items service returned error", "error", svcErr)
+		http.Error(w, svcErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, req, "/?date="+item.Date, http.StatusSeeOther)
+	// Handle non-OK response codes from the service
+	if implResp.Code >= 400 {
+		r.logger.Error("Items service returned non-OK code", "code", implResp.Code)
+		http.Error(w, http.StatusText(implResp.Code), implResp.Code)
+		return
+	}
+
+	// On success redirect to the saved date
+	http.Redirect(w, req, "/?date="+date, http.StatusSeeOther)
 }

@@ -15,6 +15,7 @@ docs/AuthData.md
 docs/Authorize200Response.md
 docs/Entity.md
 docs/ItemsAPI.md
+docs/ItemsRequest.md
 docs/ItemsResponse.md
 docs/User.md
 docs/UserAPI.md
@@ -22,6 +23,7 @@ git_push.sh
 model_auth_data.go
 model_authorize_200_response.go
 model_entity.go
+model_items_request.go
 model_items_response.go
 model_user.go
 response.go

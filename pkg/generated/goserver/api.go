@@ -37,6 +37,7 @@ type AuthAPIRouter interface {
 // pass the data to a ItemsAPIServicer to perform the required actions, then write the service results to the http response.
 type ItemsAPIRouter interface {
 	GetItems(http.ResponseWriter, *http.Request)
+	PutItems(http.ResponseWriter, *http.Request)
 }
 
 // UserAPIRouter defines the required methods for binding the api requests to a responses for the UserAPI
@@ -69,6 +70,7 @@ type AuthAPIServicer interface {
 // and updated with the logic required for the API.
 type ItemsAPIServicer interface {
 	GetItems(context.Context, string) (ImplResponse, error)
+	PutItems(context.Context, ItemsRequest) (ImplResponse, error)
 }
 
 // UserAPIServicer defines the api actions for the UserAPI service

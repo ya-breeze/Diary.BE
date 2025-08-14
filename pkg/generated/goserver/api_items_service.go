@@ -21,6 +21,8 @@ import (
 type ItemsAPIService interface {
 	// GetItems - get diary items
 	GetItems(ctx context.Context, date string) (ImplResponse, error)
+	// PutItems - upsert diary item
+	PutItems(ctx context.Context, itemsRequest ItemsRequest) (ImplResponse, error)
 }
 
 // ItemsAPIService is a service that implements the logic for the ItemsAPIServicer
@@ -49,4 +51,21 @@ func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string) (ImplRe
 	// return Response(404, nil),nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("GetItems method not implemented")
+}
+
+// PutItems - upsert diary item
+func (s *ItemsAPIServiceImpl) PutItems(ctx context.Context, itemsRequest ItemsRequest) (ImplResponse, error) {
+	// TODO - update PutItems with the required logic for this service method.
+	// Add api_items_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, ItemsResponse{}) or use other options such as http.Ok ...
+	// return Response(200, ItemsResponse{}), nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
+	// return Response(401, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("PutItems method not implemented")
 }
