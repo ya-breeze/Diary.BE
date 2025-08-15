@@ -2,9 +2,9 @@ name: PR Validation
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   validate:
@@ -12,33 +12,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
+      - name: Checkout code
+        uses: actions/checkout@v5
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: '1.24'
-        cache: true
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+          cache: true
 
-    - name: Install dependencies
-      run: |
-        go install mvdan.cc/gofumpt@v0.8.0
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
-        go install github.com/onsi/ginkgo/v2/ginkgo@v2.23.4
+      - name: Install dependencies
+        run: |
+          go install mvdan.cc/gofumpt@v0.8.0
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+          go install github.com/onsi/ginkgo/v2/ginkgo@v2.23.4
 
-    - name: Build
-      run: make build
+      - name: Build
+        run: make build
 
-    - name: Run tests
-      run: make test
+      - name: Run tests
+        run: make test
 
-    - name: Run linters
-      run: |
-        export PATH=$PATH:~/go/bin
-        make lint
+      - name: Run linters
+        run: |
+          export PATH=$PATH:~/go/bin
+          make lint
 
-    - name: Validate OpenAPI spec
-      run: |
-        export HOST_PWD=$(pwd)
-        make validate
+      - name: Validate OpenAPI spec
+        run: |
+          export HOST_PWD=$(pwd)
+          make validate
