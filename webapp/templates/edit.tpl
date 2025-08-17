@@ -8,12 +8,17 @@ $(document).ready(function () {
 
     // Event delegation for all dynamically added images
     $(document).on('click', 'img[id^="dynamicImg_"]', function () {
-        const clickedId = $(this).attr('id');
+        // Delegate to extracted helper that performs the insertion
+        insertAssetMarkdownFromId($(this).attr('id'));
+    });
+
+    function insertAssetMarkdownFromId(clickedId) {
+        const assetName = clickedId.replace('dynamicImg_', '');
         $('#body').val(function(i, val) {
-            return val + '\n![](' + clickedId.replace('dynamicImg_', '') + ')\n';
+            return val + '\n![](' + assetName + ')\n';
         });
         $('#body').focus();
-    });
+    }
 
     function addImage(name) {
         var src = $(location).attr('origin') + '/web/assets/' + name;
@@ -21,10 +26,10 @@ $(document).ready(function () {
         $('#assets').append('<div class="card" style="width: 18rem;"><img src="' + src + '" id="' + imgId + '" class="card-img-top"></div>');
     }
 
-    $('#uploadBtn').on('click', function () {
-        var fileInput = $('#imageUpload')[0];
+    // Upload immediately when a file is selected
+    $('#imageUpload').on('change', function () {
+        var fileInput = this;
         if (fileInput.files.length === 0) {
-            alert('Please select an image.');
             return;
         }
 
@@ -41,6 +46,8 @@ $(document).ready(function () {
             success: function (response) {
                 console.log("Upload successful, response: ", response);
                 addImage(response);
+                // Insert markdown for the uploaded asset
+                insertAssetMarkdownFromId('dynamicImg_' + response);
                 // Clear the file input
                 $('#imageUpload').val('');
             },
@@ -48,6 +55,11 @@ $(document).ready(function () {
                 alert('Upload failed.');
             }
         });
+    });
+
+    // Keep upload button as a shortcut to open file picker
+    $('#uploadBtn').on('click', function () {
+        $('#imageUpload').click();
     });
 });
 </script>
@@ -86,7 +98,7 @@ $(document).ready(function () {
             </form>
         </div>
         <div class="col-3 text-center">`
-            <input type="file" id="imageUpload" />
+            <input type="file" id="imageUpload" hidden />
             <button id="uploadBtn" class="btn btn-secondary">Upload asset</button>
 
             <h5>Assets</h5>
