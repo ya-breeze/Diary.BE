@@ -5,6 +5,7 @@ import (
 	"errors"
 	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/ya-breeze/diary.be/pkg/generated/goserver"
@@ -13,14 +14,18 @@ import (
 )
 
 func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
+	// Load Go templates with custom functions and template inheritance
 	tmpl, err := r.loadTemplates()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Initialize template data with common request information
 	data := utils.CreateTemplateData(req, "home")
 
+	// Authenticate user and extract user ID from session
+	// This may redirect to login page if authentication fails
 	userID, err := r.ValidateUserID(tmpl, w, req)
 	if err != nil {
 		r.logger.Error("Failed to get user ID from session", "error", err)
@@ -28,18 +33,22 @@ func (r *WebAppRouter) homeHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	data["UserID"] = userID
 
+	// Determine target date: use query parameter or default to current date
 	date := req.URL.Query().Get("date")
 	if date == "" {
 		date = utils.GetCurrentDate()
 	}
 
-	// Get items data and populate template
+	// Fetch diary entry data and populate template with content
 	if err := r.populateItemsData(data, userID, date, req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Render the template
+	// Add layout toggle configuration and feature flags to template data
+	r.addLayoutTemplateData(data, req)
+
+	// Render the home template with all collected data
 	r.renderTemplate(w, tmpl, data)
 }
 
@@ -87,6 +96,34 @@ func (r *WebAppRouter) populateItemsData(data map[string]any, userID, date strin
 	}
 
 	return nil
+}
+
+func (r *WebAppRouter) addLayoutTemplateData(data map[string]any, req *http.Request) {
+	// Feature flags for conditional template rendering
+	// These allow templates to show/hide layout controls based on capabilities
+	data["LayoutToggleEnabled"] = true
+	data["JavaScriptEnabled"] = true // Initial assumption, client-side JS will update this
+
+	// Default layout preference for server-side rendering
+	// This ensures consistent initial state before client-side preferences load
+	data["DefaultLayout"] = "narrow"
+
+	// Layout configuration object for JavaScript initialization
+	// Provides centralized configuration that can be accessed by client-side code
+	data["LayoutConfig"] = map[string]any{
+		"FullWidthPercent":   100, // Full layout mode image width percentage
+		"NarrowWidthPercent": 30,  // Narrow layout mode image width percentage
+		"TransitionDuration": 300, // CSS transition duration in milliseconds
+	}
+
+	// User agent analysis for responsive behavior hints
+	userAgent := req.Header.Get("User-Agent")
+	data["UserAgent"] = userAgent
+	data["IsMobile"] = utils.IsMobile(userAgent) // Server-side mobile detection
+
+	// Cache busting timestamp for static assets
+	// Helps ensure users get updated CSS/JS files after deployments
+	data["Timestamp"] = time.Now().Unix()
 }
 
 // renderTemplate renders the template with the provided data

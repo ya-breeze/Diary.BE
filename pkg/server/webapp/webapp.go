@@ -87,6 +87,12 @@ func (r *WebAppRouter) Routes() goserver.Routes {
 			Pattern:     "/web/assets/{rest:.*}",
 			HandlerFunc: r.assetsHandler,
 		},
+
+		"Static": goserver.Route{
+			Method:      "GET",
+			Pattern:     "/web/static/{rest:.*}",
+			HandlerFunc: r.staticHandler,
+		},
 	}
 }
 
