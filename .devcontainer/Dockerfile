@@ -3,7 +3,8 @@ FROM mcr.microsoft.com/devcontainers/go:dev-1
 # Install additional packages
 RUN apt-get update && apt-get install -y \
     bash-completion \
-    sqlite3
+    sqlite3 \
+    nodejs npm
 
 ENV USERNAME=vscode
 
