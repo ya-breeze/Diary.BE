@@ -5,12 +5,51 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/ya-breeze/diary.be/pkg/auth"
 	"github.com/ya-breeze/diary.be/pkg/generated/goserver"
 	"github.com/ya-breeze/diary.be/pkg/utils"
 )
+
+// isValidRedirectURL validates that a redirect URL is safe to use
+// It prevents open redirect vulnerabilities by ensuring the URL is internal
+func isValidRedirectURL(redirectURL string) bool {
+	if redirectURL == "" {
+		return false
+	}
+
+	// Parse the URL
+	parsedURL, err := url.Parse(redirectURL)
+	if err != nil {
+		return false
+	}
+
+	// Must be a relative URL (no scheme, no host)
+	if parsedURL.Scheme != "" || parsedURL.Host != "" {
+		return false
+	}
+
+	// Must start with "/" but not "//" (to prevent protocol-relative URLs)
+	if !strings.HasPrefix(redirectURL, "/") || strings.HasPrefix(redirectURL, "//") {
+		return false
+	}
+
+	// Additional security: prevent URLs that could be interpreted as external
+	// Block URLs with backslashes, which could be used in some browsers
+	if strings.Contains(redirectURL, "\\") {
+		return false
+	}
+
+	// Block URLs with encoded characters that could bypass validation
+	if strings.Contains(redirectURL, "%2F") || strings.Contains(redirectURL, "%5C") {
+		return false
+	}
+
+	return true
+}
 
 func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
@@ -20,6 +59,7 @@ func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 
 	username := req.Form.Get("username")
 	password := req.Form.Get("password")
+	redirectURL := req.Form.Get("redirect")
 
 	if username == "" || password == "" {
 		http.Error(w, "Username and password are required", http.StatusBadRequest)
@@ -74,7 +114,13 @@ func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	http.Redirect(w, req, "/", http.StatusSeeOther)
+	// Determine redirect destination with security validation
+	destination := "/"
+	if isValidRedirectURL(redirectURL) {
+		destination = redirectURL
+	}
+
+	http.Redirect(w, req, destination, http.StatusSeeOther)
 }
 
 func (r *WebAppRouter) logoutHandler(w http.ResponseWriter, req *http.Request) {
@@ -99,6 +145,12 @@ func (r *WebAppRouter) logoutHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	data := utils.CreateTemplateData(req, "login")
+
+	// Check if there's a redirect parameter in the logout request
+	redirectURL := req.URL.Query().Get("redirect")
+	if isValidRedirectURL(redirectURL) {
+		data["RedirectURL"] = redirectURL
+	}
 
 	if err := tmpl.ExecuteTemplate(w, "login.tpl", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -132,7 +184,15 @@ func (r *WebAppRouter) ValidateUserID(
 ) (string, error) {
 	userID, _, err := r.GetUserIDFromSession(req)
 	if err != nil {
-		if errTmpl := tmpl.ExecuteTemplate(w, "login.tpl", nil); errTmpl != nil {
+		// Capture the current request URL for redirect after login
+		redirectURL := req.URL.String()
+
+		// Create template data with redirect URL
+		data := map[string]any{
+			"RedirectURL": redirectURL,
+		}
+
+		if errTmpl := tmpl.ExecuteTemplate(w, "login.tpl", data); errTmpl != nil {
 			r.logger.Warn("failed to execute login template", "error", errTmpl)
 			http.Error(w, errTmpl.Error(), http.StatusInternalServerError)
 		}

@@ -9,6 +9,9 @@
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
         <br>
+        {{ if .RedirectURL }}
+            <input type="hidden" name="redirect" value="{{ .RedirectURL }}">
+        {{ end }}
         <button type="submit">Login</button>
     </form>
 </main>
