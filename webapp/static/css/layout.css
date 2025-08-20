@@ -459,9 +459,10 @@
         border-bottom-color: rgba(255, 255, 255, 0.1);
     }
 
+    /* Keep the empty-state card light for readability even in dark mode */
     .diary-empty-state {
-        background-color: #343a40;
-        color: #f8f9fa;
+        background-color: #ffffff;
+        color: #212529;
     }
 }
 

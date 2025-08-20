@@ -44,7 +44,7 @@
                             <a class="nav-link {{if eq .CurrentPage "home"}}active{{end}}" href="/">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{if eq .CurrentPage "edit"}}active{{end}}" href="/web/edit">Edit</a>
+                            <a class="nav-link {{if eq .CurrentPage "edit"}}active{{end}}" href="/web/edit{{ if .item.Date }}?date={{ .item.Date }}{{ end }}">Edit</a>
                         </li>
 
                         <li class="nav-item">
