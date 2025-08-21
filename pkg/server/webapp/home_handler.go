@@ -57,8 +57,9 @@ func (r *WebAppRouter) populateItemsData(data map[string]any, userID, date strin
 	// Create context with user ID for the items service
 	ctx := context.WithValue(req.Context(), common.UserIDKey, userID)
 
-	// Use the items service to get the item
-	response, err := r.itemsService.GetItems(ctx, date)
+	// Use the items service to get items (new API signature with search parameters)
+	// For home page, we use date filter for backward compatibility
+	response, err := r.itemsService.GetItems(ctx, date, "", "")
 	if err != nil {
 		r.logger.Error("Failed to get items from service", "error", err, "date", date, "userID", userID)
 		return err
@@ -69,13 +70,28 @@ func (r *WebAppRouter) populateItemsData(data map[string]any, userID, date strin
 		return errors.New("failed to get items")
 	}
 
-	itemsResponse, ok := response.Body.(goserver.ItemsResponse)
+	itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
 	if !ok {
-		r.logger.Error("Failed to cast response body to ItemsResponse")
+		r.logger.Error("Failed to cast response body to ItemsListResponse")
 		return errors.New("internal server error")
 	}
 
-	// Convert the service response to template data
+	// Handle backward compatibility: for home page with date filter, we expect 0 or 1 item
+	var itemsResponse goserver.ItemsResponse
+	if len(itemsListResponse.Items) > 0 {
+		// Use the first (and should be only) item for the specific date
+		itemsResponse = itemsListResponse.Items[0]
+	} else {
+		// Create empty item for the requested date (backward compatibility)
+		itemsResponse = goserver.ItemsResponse{
+			Date:  date,
+			Title: "",
+			Body:  "",
+			Tags:  []string{},
+		}
+	}
+
+	// Convert the service response to template data (maintaining existing structure)
 	data["item"] = map[string]any{
 		"Date":  itemsResponse.Date,
 		"Title": itemsResponse.Title,

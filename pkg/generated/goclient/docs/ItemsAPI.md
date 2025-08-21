@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 ## GetItems
 
-> ItemsResponse GetItems(ctx).Date(date).Execute()
+> ItemsListResponse GetItems(ctx).Date(date).Search(search).Tags(tags).Execute()
 
 get diary items
 
@@ -30,15 +30,17 @@ import (
 
 func main() {
 	date := time.Now() // string | filter items by date (optional) (optional)
+	search := "vacation" // string | search text to filter items by title and body content (optional)
+	tags := "personal,work" // string | comma-separated list of tags to filter items (optional)
 
 	configuration := openapiclient.NewConfiguration()
 	apiClient := openapiclient.NewAPIClient(configuration)
-	resp, r, err := apiClient.ItemsAPI.GetItems(context.Background()).Date(date).Execute()
+	resp, r, err := apiClient.ItemsAPI.GetItems(context.Background()).Date(date).Search(search).Tags(tags).Execute()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error when calling `ItemsAPI.GetItems``: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
 	}
-	// response from `GetItems`: ItemsResponse
+	// response from `GetItems`: ItemsListResponse
 	fmt.Fprintf(os.Stdout, "Response from `ItemsAPI.GetItems`: %v\n", resp)
 }
 ```
@@ -55,10 +57,12 @@ Other parameters are passed through a pointer to a apiGetItemsRequest struct via
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **date** | **string** | filter items by date (optional) | 
+ **search** | **string** | search text to filter items by title and body content | 
+ **tags** | **string** | comma-separated list of tags to filter items | 
 
 ### Return type
 
-[**ItemsResponse**](ItemsResponse.md)
+[**ItemsListResponse**](ItemsListResponse.md)
 
 ### Authorization
 

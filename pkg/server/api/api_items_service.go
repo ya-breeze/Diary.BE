@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"strings"
 
@@ -25,7 +24,7 @@ func NewItemsAPIService(logger *slog.Logger, db database.Storage) goserver.Items
 }
 
 // GetItems - get diary items
-func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string) (goserver.ImplResponse, error) {
+func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string, search string, tags string) (goserver.ImplResponse, error) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := ctx.Value(common.UserIDKey).(string)
 	if !ok {
@@ -33,37 +32,48 @@ func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string) (goserv
 		return goserver.Response(401, nil), nil
 	}
 
-	s.logger.Info("Getting items", "userID", userID, "date", date)
+	s.logger.Info("Getting items", "userID", userID, "date", date, "search", search, "tags", tags)
 
-	// Get the item for the specified date
-	item, err := s.db.GetItem(userID, date)
+	// Parse search parameters
+	searchParams := database.SearchParams{
+		Date:       date,
+		SearchText: search,
+	}
 
-	var response goserver.ItemsResponse
-	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			// Return empty item if not found
-			response = goserver.ItemsResponse{
-				Date:  date,
-				Title: "",
-				Body:  "",
-				Tags:  []string{},
-			}
-		} else {
-			s.logger.Error("Failed to get item", "error", err, "userID", userID, "date", date)
-			return goserver.Response(500, nil), nil
+	// Parse tags parameter (comma-separated)
+	if tags != "" {
+		searchParams.Tags = strings.Split(tags, ",")
+		// Trim whitespace from each tag
+		for i, tag := range searchParams.Tags {
+			searchParams.Tags[i] = strings.TrimSpace(tag)
 		}
-	} else {
-		// Convert database item to API response
-		response = goserver.ItemsResponse{
+	}
+
+	// Get items using the new search method
+	items, totalCount, err := s.db.GetItems(userID, searchParams)
+	if err != nil {
+		s.logger.Error("Failed to get items", "error", err, "userID", userID, "searchParams", searchParams)
+		return goserver.Response(500, nil), nil
+	}
+
+	// Convert database items to API response items
+	responseItems := make([]goserver.ItemsResponse, len(items))
+	for i, item := range items {
+		responseItems[i] = goserver.ItemsResponse{
 			Date:  item.Date,
 			Title: item.Title,
 			Body:  item.Body,
 			Tags:  []string(item.Tags),
 		}
+		// Add navigation dates for each item
+		s.addNavigationDates(&responseItems[i], userID, item.Date)
 	}
 
-	// Add navigation dates (common for both found and not found items)
-	s.addNavigationDates(&response, userID, date)
+	// Create the list response
+	response := goserver.ItemsListResponse{
+		Items:      responseItems,
+		TotalCount: int32(totalCount),
+	}
 
 	return goserver.Response(200, response), nil
 }

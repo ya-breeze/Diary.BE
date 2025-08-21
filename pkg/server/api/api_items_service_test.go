@@ -86,30 +86,26 @@ var _ = Describe("ItemsAPIService", func() {
 		Context("when no user ID in context", func() {
 			It("should return 401 unauthorized", func() {
 				emptyCtx := context.Background()
-				response, err := service.GetItems(emptyCtx, testDate)
+				response, err := service.GetItems(emptyCtx, testDate, "", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(response.Code).To(Equal(401))
 			})
 		})
 
-		Context("when item does not exist", func() {
-			It("should return empty item with 200 status", func() {
-				response, err := service.GetItems(ctx, testDate)
+		Context("when item does not exist (backward compatibility with date filter)", func() {
+			It("should return empty list with 200 status", func() {
+				response, err := service.GetItems(ctx, testDate, "", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(response.Code).To(Equal(200))
 
-				itemsResponse, ok := response.Body.(goserver.ItemsResponse)
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
 				Expect(ok).To(BeTrue())
-				Expect(itemsResponse.Date).To(Equal(testDate))
-				Expect(itemsResponse.Title).To(Equal(""))
-				Expect(itemsResponse.Body).To(Equal(""))
-				Expect(itemsResponse.Tags).To(Equal([]string{}))
-				Expect(itemsResponse.PreviousDate).To(BeNil())
-				Expect(itemsResponse.NextDate).To(BeNil())
+				Expect(itemsListResponse.Items).To(HaveLen(0))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(0)))
 			})
 		})
 
-		Context("when item exists", func() {
+		Context("when item exists (backward compatibility with date filter)", func() {
 			BeforeEach(func() {
 				// Create a test item
 				testItem := &models.Item{
@@ -122,17 +118,21 @@ var _ = Describe("ItemsAPIService", func() {
 				Expect(storage.PutItem(userID, testItem)).To(Succeed())
 			})
 
-			It("should return the item with 200 status", func() {
-				response, err := service.GetItems(ctx, testDate)
+			It("should return the item in list format with 200 status", func() {
+				response, err := service.GetItems(ctx, testDate, "", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(response.Code).To(Equal(200))
 
-				itemsResponse, ok := response.Body.(goserver.ItemsResponse)
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
 				Expect(ok).To(BeTrue())
-				Expect(itemsResponse.Date).To(Equal(testDate))
-				Expect(itemsResponse.Title).To(Equal("Test Title"))
-				Expect(itemsResponse.Body).To(Equal("Test Body Content"))
-				Expect(itemsResponse.Tags).To(Equal([]string{"tag1", "tag2"}))
+				Expect(itemsListResponse.Items).To(HaveLen(1))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(1)))
+
+				item := itemsListResponse.Items[0]
+				Expect(item.Date).To(Equal(testDate))
+				Expect(item.Title).To(Equal("Test Title"))
+				Expect(item.Body).To(Equal("Test Body Content"))
+				Expect(item.Tags).To(Equal([]string{"tag1", "tag2"}))
 			})
 		})
 
@@ -167,17 +167,189 @@ var _ = Describe("ItemsAPIService", func() {
 			})
 
 			It("should include previous and next dates", func() {
-				response, err := service.GetItems(ctx, testDate)
+				response, err := service.GetItems(ctx, testDate, "", "")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(response.Code).To(Equal(200))
 
-				itemsResponse, ok := response.Body.(goserver.ItemsResponse)
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
 				Expect(ok).To(BeTrue())
-				Expect(itemsResponse.Date).To(Equal(testDate))
-				Expect(itemsResponse.PreviousDate).ToNot(BeNil())
-				Expect(*itemsResponse.PreviousDate).To(Equal("2024-01-14"))
-				Expect(itemsResponse.NextDate).ToNot(BeNil())
-				Expect(*itemsResponse.NextDate).To(Equal("2024-01-16"))
+				Expect(itemsListResponse.Items).To(HaveLen(1))
+
+				item := itemsListResponse.Items[0]
+				Expect(item.Date).To(Equal(testDate))
+				Expect(item.PreviousDate).ToNot(BeNil())
+				Expect(*item.PreviousDate).To(Equal("2024-01-14"))
+				Expect(item.NextDate).ToNot(BeNil())
+				Expect(*item.NextDate).To(Equal("2024-01-16"))
+			})
+		})
+
+		Context("when searching by text", func() {
+			BeforeEach(func() {
+				// Create test items with different content
+				items := []*models.Item{
+					{
+						UserID: userID,
+						Date:   "2024-01-10",
+						Title:  "Vacation Planning",
+						Body:   "Planning my summer vacation to the beach",
+						Tags:   models.StringList{"travel", "vacation"},
+					},
+					{
+						UserID: userID,
+						Date:   "2024-01-11",
+						Title:  "Work Meeting",
+						Body:   "Had an important meeting about the project",
+						Tags:   models.StringList{"work", "meeting"},
+					},
+					{
+						UserID: userID,
+						Date:   "2024-01-12",
+						Title:  "Beach Day",
+						Body:   "Spent the day at the beach with family",
+						Tags:   models.StringList{"family", "beach"},
+					},
+				}
+				for _, item := range items {
+					Expect(storage.PutItem(userID, item)).To(Succeed())
+				}
+			})
+
+			It("should return items matching search text in title", func() {
+				response, err := service.GetItems(ctx, "", "vacation", "")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsListResponse.Items).To(HaveLen(1))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(1)))
+				Expect(itemsListResponse.Items[0].Title).To(Equal("Vacation Planning"))
+			})
+
+			It("should return items matching search text in body", func() {
+				response, err := service.GetItems(ctx, "", "beach", "")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsListResponse.Items).To(HaveLen(2))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(2)))
+			})
+
+			It("should return empty list when no matches found", func() {
+				response, err := service.GetItems(ctx, "", "nonexistent", "")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsListResponse.Items).To(HaveLen(0))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(0)))
+			})
+		})
+
+		Context("when searching by tags", func() {
+			BeforeEach(func() {
+				// Create test items with different tags
+				items := []*models.Item{
+					{
+						UserID: userID,
+						Date:   "2024-01-10",
+						Title:  "Work Project",
+						Body:   "Working on the new project",
+						Tags:   models.StringList{"work", "project"},
+					},
+					{
+						UserID: userID,
+						Date:   "2024-01-11",
+						Title:  "Family Time",
+						Body:   "Spending time with family",
+						Tags:   models.StringList{"family", "personal"},
+					},
+					{
+						UserID: userID,
+						Date:   "2024-01-12",
+						Title:  "Work Meeting",
+						Body:   "Important work meeting",
+						Tags:   models.StringList{"work", "meeting"},
+					},
+				}
+				for _, item := range items {
+					Expect(storage.PutItem(userID, item)).To(Succeed())
+				}
+			})
+
+			It("should return items matching single tag", func() {
+				response, err := service.GetItems(ctx, "", "", "work")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsListResponse.Items).To(HaveLen(2))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(2)))
+			})
+
+			It("should return items matching multiple tags", func() {
+				response, err := service.GetItems(ctx, "", "", "family,personal")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsListResponse.Items).To(HaveLen(1))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(1)))
+				Expect(itemsListResponse.Items[0].Title).To(Equal("Family Time"))
+			})
+
+			It("should return empty list when no tag matches found", func() {
+				response, err := service.GetItems(ctx, "", "", "nonexistent")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsListResponse.Items).To(HaveLen(0))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(0)))
+			})
+		})
+
+		Context("when searching with combined filters", func() {
+			BeforeEach(func() {
+				// Create test items
+				items := []*models.Item{
+					{
+						UserID: userID,
+						Date:   "2024-01-10",
+						Title:  "Work Project Meeting",
+						Body:   "Important project discussion",
+						Tags:   models.StringList{"work", "project"},
+					},
+					{
+						UserID: userID,
+						Date:   "2024-01-11",
+						Title:  "Personal Project",
+						Body:   "Working on personal coding project",
+						Tags:   models.StringList{"personal", "coding"},
+					},
+				}
+				for _, item := range items {
+					Expect(storage.PutItem(userID, item)).To(Succeed())
+				}
+			})
+
+			It("should return items matching both text and tags", func() {
+				response, err := service.GetItems(ctx, "", "project", "work")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(response.Code).To(Equal(200))
+
+				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
+				Expect(ok).To(BeTrue())
+				Expect(itemsListResponse.Items).To(HaveLen(1))
+				Expect(itemsListResponse.TotalCount).To(Equal(int32(1)))
+				Expect(itemsListResponse.Items[0].Title).To(Equal("Work Project Meeting"))
 			})
 		})
 	})

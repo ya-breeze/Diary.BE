@@ -65,6 +65,12 @@ func (r *WebAppRouter) Routes() goserver.Routes {
 			HandlerFunc: r.aboutHandler,
 		},
 
+		"Search": goserver.Route{
+			Method:      "GET",
+			Pattern:     "/web/search",
+			HandlerFunc: r.searchHandler,
+		},
+
 		"Edit": goserver.Route{
 			Method:      "GET",
 			Pattern:     "/web/edit",
@@ -123,6 +129,12 @@ func (r *WebAppRouter) loadTemplates() (*template.Template, error) {
 			q.Set(key, fmt.Sprintf("%v", value))
 			u.RawQuery = q.Encode()
 			return u.String(), nil
+		},
+		"truncate": func(s string, length int) string {
+			if len(s) <= length {
+				return s
+			}
+			return s[:length]
 		},
 	}).ParseGlob(filepath.Join("webapp", "templates", "*.tpl"))
 	if err != nil {

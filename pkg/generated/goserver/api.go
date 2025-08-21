@@ -69,7 +69,7 @@ type AuthAPIServicer interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type ItemsAPIServicer interface {
-	GetItems(context.Context, string) (ImplResponse, error)
+	GetItems(context.Context, string, string, string) (ImplResponse, error)
 	PutItems(context.Context, ItemsRequest) (ImplResponse, error)
 }
 

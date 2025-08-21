@@ -127,15 +127,29 @@ paths:
             type: string
             format: date
           example: "2024-01-15"
+        - name: search
+          in: query
+          description: search text to filter items by title and body content
+          required: false
+          schema:
+            type: string
+          example: "vacation"
+        - name: tags
+          in: query
+          description: comma-separated list of tags to filter items
+          required: false
+          schema:
+            type: string
+          example: "personal,work"
       responses:
         "200":
           description: diary items
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ItemsResponse"
+                $ref: "#/components/schemas/ItemsListResponse"
         "400":
-          description: Invalid date format
+          description: Invalid parameters
         "404":
           description: No items found
     put:
@@ -263,3 +277,19 @@ components:
         - date
         - title
         - body
+
+    ItemsListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ItemsResponse"
+          description: "List of diary items matching the search criteria"
+        totalCount:
+          type: integer
+          description: "Total number of items found"
+          example: 42
+      required:
+        - items
+        - totalCount

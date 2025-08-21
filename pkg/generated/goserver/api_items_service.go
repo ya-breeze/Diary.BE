@@ -20,7 +20,7 @@ import (
 // ItemsAPIService is an interface that defines the logic for the ItemsAPIServicer
 type ItemsAPIService interface {
 	// GetItems - get diary items
-	GetItems(ctx context.Context, date string) (ImplResponse, error)
+	GetItems(ctx context.Context, date string, search string, tags string) (ImplResponse, error)
 	// PutItems - upsert diary item
 	PutItems(ctx context.Context, itemsRequest ItemsRequest) (ImplResponse, error)
 }
@@ -37,12 +37,12 @@ func NewItemsAPIService() ItemsAPIService {
 }
 
 // GetItems - get diary items
-func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string) (ImplResponse, error) {
+func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string, search string, tags string) (ImplResponse, error) {
 	// TODO - update GetItems with the required logic for this service method.
 	// Add api_items_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
-	// TODO: Uncomment the next line to return response Response(200, ItemsResponse{}) or use other options such as http.Ok ...
-	// return Response(200, ItemsResponse{}), nil
+	// TODO: Uncomment the next line to return response Response(200, ItemsListResponse{}) or use other options such as http.Ok ...
+	// return Response(200, ItemsListResponse{}), nil
 
 	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
 	// return Response(400, nil),nil

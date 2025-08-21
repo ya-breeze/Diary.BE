@@ -26,6 +26,8 @@ type ApiGetItemsRequest struct {
 	ctx        context.Context
 	ApiService *ItemsAPIService
 	date       *string
+	search     *string
+	tags       *string
 }
 
 // filter items by date (optional)
@@ -34,7 +36,19 @@ func (r ApiGetItemsRequest) Date(date string) ApiGetItemsRequest {
 	return r
 }
 
-func (r ApiGetItemsRequest) Execute() (*ItemsResponse, *http.Response, error) {
+// search text to filter items by title and body content
+func (r ApiGetItemsRequest) Search(search string) ApiGetItemsRequest {
+	r.search = &search
+	return r
+}
+
+// comma-separated list of tags to filter items
+func (r ApiGetItemsRequest) Tags(tags string) ApiGetItemsRequest {
+	r.tags = &tags
+	return r
+}
+
+func (r ApiGetItemsRequest) Execute() (*ItemsListResponse, *http.Response, error) {
 	return r.ApiService.GetItemsExecute(r)
 }
 
@@ -53,13 +67,13 @@ func (a *ItemsAPIService) GetItems(ctx context.Context) ApiGetItemsRequest {
 
 // Execute executes the request
 //
-//	@return ItemsResponse
-func (a *ItemsAPIService) GetItemsExecute(r ApiGetItemsRequest) (*ItemsResponse, *http.Response, error) {
+//	@return ItemsListResponse
+func (a *ItemsAPIService) GetItemsExecute(r ApiGetItemsRequest) (*ItemsListResponse, *http.Response, error) {
 	var (
 		localVarHTTPMethod  = http.MethodGet
 		localVarPostBody    interface{}
 		formFiles           []formFile
-		localVarReturnValue *ItemsResponse
+		localVarReturnValue *ItemsListResponse
 	)
 
 	localBasePath, err := a.client.cfg.ServerURLWithContext(r.ctx, "ItemsAPIService.GetItems")
@@ -75,6 +89,12 @@ func (a *ItemsAPIService) GetItemsExecute(r ApiGetItemsRequest) (*ItemsResponse,
 
 	if r.date != nil {
 		parameterAddToHeaderOrQuery(localVarQueryParams, "date", r.date, "")
+	}
+	if r.search != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "search", r.search, "")
+	}
+	if r.tags != nil {
+		parameterAddToHeaderOrQuery(localVarQueryParams, "tags", r.tags, "")
 	}
 	// to determine the Content-Type header
 	localVarHTTPContentTypes := []string{}

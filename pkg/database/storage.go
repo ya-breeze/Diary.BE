@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +19,16 @@ const StorageError = "storage error: %w"
 
 var ErrNotFound = errors.New("not found")
 
+// SearchParams defines parameters for searching diary items
+type SearchParams struct {
+	// SearchText filters items by title and body content (case-insensitive)
+	SearchText string
+	// Tags filters items that contain any of the specified tags
+	Tags []string
+	// Date filters items by specific date (optional, for backward compatibility)
+	Date string
+}
+
 type Storage interface {
 	Open() error
 	Close() error
@@ -28,6 +39,7 @@ type Storage interface {
 	PutUser(user *models.User) error
 
 	GetItem(userID, itemID string) (*models.Item, error)
+	GetItems(userID string, searchParams SearchParams) ([]*models.Item, int, error)
 	PutItem(userID string, item *models.Item) error
 
 	GetPreviousDate(userID, date string) (string, error)
@@ -143,6 +155,48 @@ func (s *storage) GetItem(userID, date string) (*models.Item, error) {
 	}
 
 	return &item, nil
+}
+
+func (s *storage) GetItems(userID string, searchParams SearchParams) ([]*models.Item, int, error) {
+	var items []*models.Item
+	query := s.db.Where("user_id = ?", userID)
+
+	// Apply date filter if specified (for backward compatibility)
+	if searchParams.Date != "" {
+		query = query.Where("date = ?", searchParams.Date)
+	}
+
+	// Apply text search filter if specified
+	if searchParams.SearchText != "" {
+		searchPattern := "%" + searchParams.SearchText + "%"
+		query = query.Where("title LIKE ? OR body LIKE ?", searchPattern, searchPattern)
+	}
+
+	// Apply tag filters if specified
+	if len(searchParams.Tags) > 0 {
+		// For JSON tag filtering, we need to check if any of the specified tags exist in the JSON array
+		tagConditions := make([]string, len(searchParams.Tags))
+		tagArgs := make([]interface{}, len(searchParams.Tags))
+		for i, tag := range searchParams.Tags {
+			tagConditions[i] = "JSON_EXTRACT(tags, '$') LIKE ?"
+			tagArgs[i] = "%\"" + tag + "\"%"
+		}
+		tagQuery := strings.Join(tagConditions, " OR ")
+		query = query.Where(tagQuery, tagArgs...)
+	}
+
+	// Get total count for pagination
+	var totalCount int64
+	if err := query.Model(&models.Item{}).Count(&totalCount).Error; err != nil {
+		return nil, 0, fmt.Errorf(StorageError, err)
+	}
+
+	// Execute the query to get items, ordered by date descending
+	if err := query.Order("date DESC").Find(&items).Error; err != nil {
+		return nil, 0, fmt.Errorf(StorageError, err)
+	}
+
+	return items, int(totalCount), nil
 }
 
 func (s *storage) PutItem(userID string, item *models.Item) error {

@@ -51,9 +51,18 @@
                             <a class="nav-link {{if eq .CurrentPage "about"}}active{{end}}" href="/web/about">About</a>
                         </li>
                     </ul>
-                    <form class="d-flex ms-auto">
-                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-                        <button class="btn btn-outline-success" type="submit">Search</button>
+                    <form class="d-flex ms-auto" action="/web/search" method="GET" role="search">
+                        <input class="form-control me-2"
+                               type="search"
+                               name="search"
+                               placeholder="Search diary entries..."
+                               aria-label="Search diary entries"
+                               value="{{ .searchQuery }}"
+                               autocomplete="off">
+                        <button class="btn btn-outline-success" type="submit" aria-label="Submit search">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <span class="d-none d-md-inline">Search</span>
+                        </button>
                     </form>
                     <ul class="navbar-nav ms-3">
                         <li class="nav-item">

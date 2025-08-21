@@ -77,7 +77,21 @@ func (c *ItemsAPIController) GetItems(w http.ResponseWriter, r *http.Request) {
 		dateParam = param
 	} else {
 	}
-	result, err := c.service.GetItems(r.Context(), dateParam)
+	var searchParam string
+	if query.Has("search") {
+		param := query.Get("search")
+
+		searchParam = param
+	} else {
+	}
+	var tagsParam string
+	if query.Has("tags") {
+		param := query.Get("tags")
+
+		tagsParam = param
+	} else {
+	}
+	result, err := c.service.GetItems(r.Context(), dateParam, searchParam, tagsParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

@@ -45,16 +45,22 @@ var _ = Describe("Put and Fetch Item Flow", func() {
 				Expect(putResp.Body).To(Equal("This is a test body for the diary entry."))
 				Expect(putResp.Tags).To(Equal([]string{"test", "ginkgo"}))
 
-				// Fetch the item via generated goclient GetItems
+				// Fetch the item via generated goclient GetItems (now returns list)
 				fetched, httpResp, err := setup.APIClient.ItemsAPI.GetItems(context.Background()).Date(date).Execute()
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 				Expect(fetched).ToNot(BeNil())
 
-				Expect(fetched.Date).To(Equal(date))
-				Expect(fetched.Title).To(Equal("Test Entry Title"))
-				Expect(fetched.Body).To(Equal("This is a test body for the diary entry."))
-				Expect(fetched.Tags).To(Equal([]string{"test", "ginkgo"}))
+				// Verify the list response format
+				Expect(fetched.Items).To(HaveLen(1))
+				Expect(fetched.TotalCount).To(Equal(int32(1)))
+
+				// Verify the item content
+				item := fetched.Items[0]
+				Expect(item.Date).To(Equal(date))
+				Expect(item.Title).To(Equal("Test Entry Title"))
+				Expect(item.Body).To(Equal("This is a test body for the diary entry."))
+				Expect(item.Tags).To(Equal([]string{"test", "ginkgo"}))
 			})
 		})
 	})
