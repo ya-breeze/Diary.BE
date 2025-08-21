@@ -108,11 +108,15 @@ var _ = Describe("Search Integration Flow", func() {
 
 			It("should return empty results when no matches found", func() {
 				// Search for non-existent text
-				searchResult, httpResp, err := setup.APIClient.ItemsAPI.GetItems(context.Background()).Search("nonexistent").Execute()
+				searchResult, httpResp, err := setup.APIClient.ItemsAPI.
+					GetItems(context.Background()).
+					Search("nonexistent").
+					Execute()
+
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 
-				Expect(searchResult.Items).To(HaveLen(0))
+				Expect(searchResult.Items).To(BeEmpty())
 				Expect(searchResult.TotalCount).To(Equal(int32(0)))
 			})
 		})
@@ -130,7 +134,11 @@ var _ = Describe("Search Integration Flow", func() {
 
 			It("should return items matching multiple tags", func() {
 				// Search for multiple tags
-				searchResult, httpResp, err := setup.APIClient.ItemsAPI.GetItems(context.Background()).Tags("family,leisure").Execute()
+				searchResult, httpResp, err := setup.APIClient.ItemsAPI.
+					GetItems(context.Background()).
+					Tags("family,leisure").
+					Execute()
+
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 
@@ -141,7 +149,11 @@ var _ = Describe("Search Integration Flow", func() {
 
 			It("should handle tags with spaces correctly", func() {
 				// Search for tags with spaces around commas
-				searchResult, httpResp, err := setup.APIClient.ItemsAPI.GetItems(context.Background()).Tags("work, project").Execute()
+				searchResult, httpResp, err := setup.APIClient.ItemsAPI.
+					GetItems(context.Background()).
+					Tags("work, project").
+					Execute()
+
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 
@@ -155,7 +167,7 @@ var _ = Describe("Search Integration Flow", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 
-				Expect(searchResult.Items).To(HaveLen(0))
+				Expect(searchResult.Items).To(BeEmpty())
 				Expect(searchResult.TotalCount).To(Equal(int32(0)))
 			})
 		})
@@ -163,7 +175,12 @@ var _ = Describe("Search Integration Flow", func() {
 		Context("when searching with combined filters", func() {
 			It("should return items matching both text and tags", func() {
 				// Search for "project" text with "work" tag
-				searchResult, httpResp, err := setup.APIClient.ItemsAPI.GetItems(context.Background()).Search("project").Tags("work").Execute()
+				searchResult, httpResp, err := setup.APIClient.ItemsAPI.
+					GetItems(context.Background()).
+					Search("project").
+					Tags("work").
+					Execute()
+
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 
@@ -173,11 +190,16 @@ var _ = Describe("Search Integration Flow", func() {
 
 			It("should return empty results when filters don't match together", func() {
 				// Search for "vacation" text with "work" tag (should not match)
-				searchResult, httpResp, err := setup.APIClient.ItemsAPI.GetItems(context.Background()).Search("vacation").Tags("work").Execute()
+				searchResult, httpResp, err := setup.APIClient.ItemsAPI.
+					GetItems(context.Background()).
+					Search("vacation").
+					Tags("work").
+					Execute()
+
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 
-				Expect(searchResult.Items).To(HaveLen(0))
+				Expect(searchResult.Items).To(BeEmpty())
 				Expect(searchResult.TotalCount).To(Equal(int32(0)))
 			})
 		})
@@ -201,7 +223,7 @@ var _ = Describe("Search Integration Flow", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(httpResp.StatusCode).To(Equal(http.StatusOK))
 
-				Expect(searchResult.Items).To(HaveLen(0))
+				Expect(searchResult.Items).To(BeEmpty())
 				Expect(searchResult.TotalCount).To(Equal(int32(0)))
 			})
 		})

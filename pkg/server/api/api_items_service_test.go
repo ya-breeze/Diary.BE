@@ -100,7 +100,7 @@ var _ = Describe("ItemsAPIService", func() {
 
 				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
 				Expect(ok).To(BeTrue())
-				Expect(itemsListResponse.Items).To(HaveLen(0))
+				Expect(itemsListResponse.Items).To(BeEmpty())
 				Expect(itemsListResponse.TotalCount).To(Equal(int32(0)))
 			})
 		})
@@ -245,7 +245,7 @@ var _ = Describe("ItemsAPIService", func() {
 
 				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
 				Expect(ok).To(BeTrue())
-				Expect(itemsListResponse.Items).To(HaveLen(0))
+				Expect(itemsListResponse.Items).To(BeEmpty())
 				Expect(itemsListResponse.TotalCount).To(Equal(int32(0)))
 			})
 		})
@@ -311,7 +311,7 @@ var _ = Describe("ItemsAPIService", func() {
 
 				itemsListResponse, ok := response.Body.(goserver.ItemsListResponse)
 				Expect(ok).To(BeTrue())
-				Expect(itemsListResponse.Items).To(HaveLen(0))
+				Expect(itemsListResponse.Items).To(BeEmpty())
 				Expect(itemsListResponse.TotalCount).To(Equal(int32(0)))
 			})
 		})

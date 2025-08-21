@@ -29,6 +29,7 @@ type SearchParams struct {
 	Date string
 }
 
+//nolint:interfacebloat // keep a single storage interface for simplicity
 type Storage interface {
 	Open() error
 	Close() error
@@ -176,7 +177,7 @@ func (s *storage) GetItems(userID string, searchParams SearchParams) ([]*models.
 	if len(searchParams.Tags) > 0 {
 		// For JSON tag filtering, we need to check if any of the specified tags exist in the JSON array
 		tagConditions := make([]string, len(searchParams.Tags))
-		tagArgs := make([]interface{}, len(searchParams.Tags))
+		tagArgs := make([]any, len(searchParams.Tags))
 		for i, tag := range searchParams.Tags {
 			tagConditions[i] = "JSON_EXTRACT(tags, '$') LIKE ?"
 			tagArgs[i] = "%\"" + tag + "\"%"

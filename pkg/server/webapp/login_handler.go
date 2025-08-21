@@ -51,6 +51,21 @@ func isValidRedirectURL(redirectURL string) bool {
 	return true
 }
 
+func (r *WebAppRouter) setSessionToken(w http.ResponseWriter, req *http.Request, token string) error {
+	session, err := r.cookies.Get(req, r.cfg.CookieName)
+	if err != nil {
+		return err
+	}
+	session.Values["token"] = token
+	// Allow to use without HTTPS - for local network
+	session.Options.Secure = false
+	session.Options.SameSite = http.SameSiteLaxMode
+	if err := session.Save(req, w); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 	if err := req.ParseForm(); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -97,18 +112,7 @@ func (r *WebAppRouter) loginHandler(w http.ResponseWriter, req *http.Request) {
 	token := authResponse.Token
 
 	// set JWT token in cookie
-	session, err := r.cookies.Get(req, r.cfg.CookieName)
-	if err != nil {
-		r.logger.Warn("failed to get session", "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	session.Values["token"] = token
-	// Allow to use without HTTPS - for local network
-	session.Options.Secure = false
-	session.Options.SameSite = http.SameSiteLaxMode
-	err = session.Save(req, w)
-	if err != nil {
+	if err := r.setSessionToken(w, req, token); err != nil {
 		r.logger.Warn("failed to save session", "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

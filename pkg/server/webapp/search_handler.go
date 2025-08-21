@@ -40,11 +40,10 @@ func (r *WebAppRouter) searchHandler(w http.ResponseWriter, req *http.Request) {
 	// Parse tags parameter (comma-separated)
 	var searchTags []string
 	if tagsParam != "" {
-		tags := strings.Split(tagsParam, ",")
-		for _, tag := range tags {
-			tag = strings.TrimSpace(tag)
-			if tag != "" {
-				searchTags = append(searchTags, tag)
+		for tag := range strings.SplitSeq(tagsParam, ",") {
+			t := strings.TrimSpace(tag)
+			if t != "" {
+				searchTags = append(searchTags, t)
 			}
 		}
 	}
@@ -66,7 +65,16 @@ func (r *WebAppRouter) searchHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 // populateSearchData fetches search results and populates the template data
-func (r *WebAppRouter) populateSearchData(data map[string]any, userID, searchQuery string, searchTags []string, dateParam string, req *http.Request) error {
+//
+//nolint:funlen // acceptable length for orchestrating search flow and template population
+func (r *WebAppRouter) populateSearchData(
+	data map[string]any,
+	userID string,
+	searchQuery string,
+	searchTags []string,
+	dateParam string,
+	req *http.Request,
+) error {
 	// Create context with user ID for the items service
 	ctx := context.WithValue(req.Context(), common.UserIDKey, userID)
 
@@ -76,12 +84,24 @@ func (r *WebAppRouter) populateSearchData(data map[string]any, userID, searchQue
 	// Use the items service to get search results
 	response, err := r.itemsService.GetItems(ctx, dateParam, searchQuery, tagsParam)
 	if err != nil {
-		r.logger.Error("Failed to get search results from service", "error", err, "searchQuery", searchQuery, "tags", tagsParam, "userID", userID)
+		r.logger.Error(
+			"Failed to get search results from service",
+			"error", err,
+			"searchQuery", searchQuery,
+			"tags", tagsParam,
+			"userID", userID,
+		)
 		return err
 	}
 
 	if response.Code != 200 {
-		r.logger.Error("Items service returned non-200 status", "code", response.Code, "searchQuery", searchQuery, "tags", tagsParam, "userID", userID)
+		r.logger.Error(
+			"Items service returned non-200 status",
+			"code", response.Code,
+			"searchQuery", searchQuery,
+			"tags", tagsParam,
+			"userID", userID,
+		)
 		return errors.New("failed to get search results")
 	}
 

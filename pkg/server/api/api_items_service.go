@@ -24,7 +24,12 @@ func NewItemsAPIService(logger *slog.Logger, db database.Storage) goserver.Items
 }
 
 // GetItems - get diary items
-func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string, search string, tags string) (goserver.ImplResponse, error) {
+func (s *ItemsAPIServiceImpl) GetItems(
+	ctx context.Context,
+	date string,
+	search string,
+	tags string,
+) (goserver.ImplResponse, error) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := ctx.Value(common.UserIDKey).(string)
 	if !ok {
@@ -72,7 +77,7 @@ func (s *ItemsAPIServiceImpl) GetItems(ctx context.Context, date string, search 
 	// Create the list response
 	response := goserver.ItemsListResponse{
 		Items:      responseItems,
-		TotalCount: int32(totalCount),
+		TotalCount: int32(totalCount), //nolint:gosec // safe conversion from bounded DB count to int32 for API response
 	}
 
 	return goserver.Response(200, response), nil

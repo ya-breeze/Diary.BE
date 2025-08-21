@@ -9,10 +9,10 @@ import (
 func (r *WebAppRouter) staticHandler(w http.ResponseWriter, req *http.Request) {
 	// Extract the file path from the URL
 	staticPath := strings.TrimPrefix(req.URL.Path, "/web/static/")
-	
+
 	// Construct the full file path
 	filePath := filepath.Join("webapp", "static", staticPath)
-	
+
 	// Security check: ensure the path doesn't escape the static directory
 	cleanPath := filepath.Clean(filePath)
 	if !strings.HasPrefix(cleanPath, "webapp/static/") {
@@ -20,9 +20,9 @@ func (r *WebAppRouter) staticHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
-	
+
 	r.logger.Info("Serving static file", "path", cleanPath)
-	
+
 	// Set appropriate content type based on file extension
 	ext := filepath.Ext(cleanPath)
 	switch ext {
@@ -39,7 +39,7 @@ func (r *WebAppRouter) staticHandler(w http.ResponseWriter, req *http.Request) {
 	case ".svg":
 		w.Header().Set("Content-Type", "image/svg+xml")
 	}
-	
+
 	// Serve the file
 	http.ServeFile(w, req, cleanPath)
 }
