@@ -6,9 +6,18 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 
 	"github.com/google/uuid"
 )
+
+// List of allowed file extensions
+//
+//nolint:gochecknoglobals
+var allowedExtensions = []string{
+	".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".mp4", ".mov", ".avi", ".wmv", ".flv", ".mkv",
+}
 
 func (r *WebAppRouter) uploadHandler(w http.ResponseWriter, req *http.Request) {
 	userID, code, err := r.GetUserIDFromSession(req)
@@ -18,12 +27,12 @@ func (r *WebAppRouter) uploadHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err = req.ParseMultipartForm(10 << 20); err != nil {
+	if err = req.ParseMultipartForm(100 << 20); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	asset, _, err := req.FormFile("asset")
+	asset, header, err := req.FormFile("asset")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -38,8 +47,15 @@ func (r *WebAppRouter) uploadHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// Check file by extension from header - only allow images and videos
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if !slices.Contains(allowedExtensions, ext) {
+		http.Error(w, "Invalid file type", http.StatusBadRequest)
+		return
+	}
+
 	// Create the uploaded file on the server
-	filename := uuid.New().String() + ".jpg"
+	filename := uuid.New().String() + filepath.Ext(header.Filename)
 	filePath := filepath.Join(userAssetPath, filename)
 	r.logger.Info("Saving file", "path", filePath)
 	dst, err := os.Create(filePath)
