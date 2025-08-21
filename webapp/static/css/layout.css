@@ -575,8 +575,11 @@
 }
 
 /* Individual diary entry cards */
-.diary-entry-card {
+.diary-entry-card,
+.diary-search-page .diary-entry-card,
+.search-results .diary-entry-card {
     background: #ffffff !important;
+    background-color: #ffffff !important;
     border: 1px solid #e9ecef;
     border-radius: 0.5rem;
     padding: 1.5rem;
@@ -585,11 +588,14 @@
     color: #495057 !important;
 }
 
-.diary-entry-card:hover {
+.diary-entry-card:hover,
+.diary-search-page .diary-entry-card:hover,
+.search-results .diary-entry-card:hover {
     border-color: #0d6efd;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
     background: #ffffff !important;
+    background-color: #ffffff !important;
 }
 
 /* Entry header styles */
@@ -721,14 +727,20 @@
 
 /* Force white background for search results even in dark mode */
 @media (prefers-color-scheme: dark) {
-    .diary-entry-card {
+    .diary-entry-card,
+    .diary-search-page .diary-entry-card,
+    .search-results .diary-entry-card {
+        background: #ffffff !important;
         background-color: #ffffff !important;
         border-color: #e9ecef !important;
         color: #495057 !important;
     }
 
-    .diary-entry-card:hover {
+    .diary-entry-card:hover,
+    .diary-search-page .diary-entry-card:hover,
+    .search-results .diary-entry-card:hover {
         border-color: #0d6efd !important;
+        background: #ffffff !important;
         background-color: #ffffff !important;
     }
 
@@ -767,5 +779,37 @@
         border-bottom: 2px solid #000;
         padding-bottom: 1rem;
         margin-bottom: 2rem;
+    }
+}
+
+/* Ultra-specific override to ensure white background for search results */
+.diary-search-page .search-results .diary-entry-card,
+.diary-search-page .search-results article.diary-entry-card,
+article.diary-entry-card {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+}
+
+.diary-search-page .search-results .diary-entry-card:hover,
+.diary-search-page .search-results article.diary-entry-card:hover,
+article.diary-entry-card:hover {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+}
+
+/* Force white background in all color schemes */
+@media (prefers-color-scheme: dark) {
+    .diary-search-page .search-results .diary-entry-card,
+    .diary-search-page .search-results article.diary-entry-card,
+    article.diary-entry-card {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
+    }
+
+    .diary-search-page .search-results .diary-entry-card:hover,
+    .diary-search-page .search-results article.diary-entry-card:hover,
+    article.diary-entry-card:hover {
+        background: #ffffff !important;
+        background-color: #ffffff !important;
     }
 }

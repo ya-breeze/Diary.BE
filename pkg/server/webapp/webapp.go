@@ -7,6 +7,7 @@ import (
 	"math"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gorilla/sessions"
@@ -135,6 +136,26 @@ func (r *WebAppRouter) loadTemplates() (*template.Template, error) {
 				return s
 			}
 			return s[:length]
+		},
+		// snippet collapses whitespace and trims trailing underscores/asterisks to keep preview inline
+		"snippet": func(s string, length int) string {
+			// Basic truncate first
+			if len(s) > length {
+				s = s[:length]
+			}
+			// Normalize whitespace to single spaces
+			s = strings.ReplaceAll(s, "\r", " ")
+			s = strings.ReplaceAll(s, "\n", " ")
+			s = strings.ReplaceAll(s, "\t", " ")
+			// Collapse multiple spaces
+			for strings.Contains(s, "  ") {
+				s = strings.ReplaceAll(s, "  ", " ")
+			}
+			// Trim spaces
+			s = strings.TrimSpace(s)
+			// Trim dangling markdown emphasis/underscore fragments at the end
+			s = strings.TrimRight(s, "_*")
+			return s
 		},
 	}).ParseGlob(filepath.Join("webapp", "templates", "*.tpl"))
 	if err != nil {

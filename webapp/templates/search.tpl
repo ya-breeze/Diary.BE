@@ -45,10 +45,10 @@
             {{ if .items }}
                 <div class="search-results" role="region" aria-label="Search results">
                     {{ range .items }}
-                        <article class="diary-entry-card mb-4" role="article">
+                        <article class="diary-entry-card mb-4 position-relative" role="article">
                             <header class="diary-entry-header">
                                 <h2 class="diary-entry-title">
-                                    <a href="/web/?date={{ .Date }}" class="text-decoration-none">
+                                    <a href="/?date={{ .Date }}" class="text-decoration-none stretched-link">
                                         <time datetime="{{ .Date }}" class="fw-bold">{{ .Date }}</time>
                                         {{ if .Title }}
                                             - {{ .Title }}
@@ -66,16 +66,7 @@
                             
                             <div class="diary-entry-preview mt-3">
                                 {{ if .Body }}
-                                    <div class="diary-entry-body">
-                                        {{ if gt (len .Body) 300 }}
-                                            {{ truncate .Body 300 }}...
-                                            <a href="/web/?date={{ .Date }}" class="text-primary ms-2" aria-label="Read full entry for {{ .Date }}">
-                                                Read more...
-                                            </a>
-                                        {{ else }}
-                                            {{ .Body }}
-                                        {{ end }}
-                                    </div>
+                                    <div class="diary-entry-body">{{- if gt (len .Body) 300 -}}{{- snippet .Body 300 -}}... <a href="/?date={{ .Date }}" class="text-primary ms-2" aria-label="Read full entry for {{ .Date }}">Read more...</a>{{- else -}}{{- .Body -}}{{- end -}}</div>
                                 {{ else }}
                                     <p class="text-muted fst-italic">No content</p>
                                 {{ end }}
@@ -83,11 +74,7 @@
                             
                             <footer class="diary-entry-footer mt-3">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <a href="/web/?date={{ .Date }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-eye" aria-hidden="true"></i>
-                                        View Entry
-                                    </a>
-                                    <a href="/web/edit?date={{ .Date }}" class="btn btn-outline-secondary btn-sm">
+                                    <a href="/web/edit?date={{ .Date }}" class="btn btn-outline-secondary btn-sm position-relative z-3">
                                         <i class="bi bi-pencil" aria-hidden="true"></i>
                                         Edit
                                     </a>
