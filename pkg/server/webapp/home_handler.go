@@ -89,6 +89,14 @@ func (r *WebAppRouter) populateItemsData(data map[string]any, userID, date strin
 			Body:  "",
 			Tags:  []string{},
 		}
+		// For empty items, we need to manually add navigation dates
+		// since the service doesn't populate them for non-existent items
+		if previousDate, err := r.db.GetPreviousDate(userID, date); err == nil {
+			itemsResponse.PreviousDate = &previousDate
+		}
+		if nextDate, err := r.db.GetNextDate(userID, date); err == nil {
+			itemsResponse.NextDate = &nextDate
+		}
 	}
 
 	// Convert the service response to template data (maintaining existing structure)
