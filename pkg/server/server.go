@@ -54,6 +54,7 @@ func createControllers(logger *slog.Logger, cfg *config.Config, db database.Stor
 		UserAPIService:   api.NewUserAPIService(logger, db),
 		AssetsAPIService: api.NewAssetsAPIService(logger, cfg),
 		ItemsAPIService:  api.NewItemsAPIService(logger, db),
+		SyncAPIService:   api.NewSyncAPIService(logger, db),
 	}
 }
 

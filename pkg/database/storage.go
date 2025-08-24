@@ -42,9 +42,16 @@ type Storage interface {
 	GetItem(userID, itemID string) (*models.Item, error)
 	GetItems(userID string, searchParams SearchParams) ([]*models.Item, int, error)
 	PutItem(userID string, item *models.Item) error
+	DeleteItem(userID, itemID string) error
 
 	GetPreviousDate(userID, date string) (string, error)
 	GetNextDate(userID, date string) (string, error)
+
+	// Change tracking methods for synchronization
+	CreateChangeRecord(userID, date string, operationType models.OperationType,
+		itemSnapshot *models.Item, metadata []string) error
+	GetChangesSince(userID string, sinceID uint, limit int) ([]*models.ItemChange, error)
+	GetLatestChangeID(userID string) (uint, error)
 }
 
 type storage struct {
@@ -202,7 +209,83 @@ func (s *storage) GetItems(userID string, searchParams SearchParams) ([]*models.
 
 func (s *storage) PutItem(userID string, item *models.Item) error {
 	item.UserID = userID
-	if err := s.db.Save(item).Error; err != nil {
+
+	// Start a transaction to ensure atomicity
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return fmt.Errorf(StorageError, tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Check if item exists to determine operation type
+	var existingItem models.Item
+	isUpdate := tx.Where("user_id = ? AND date = ?", userID, item.Date).First(&existingItem).Error == nil
+
+	// Save the item
+	if err := tx.Save(item).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf(StorageError, err)
+	}
+
+	// Create change record
+	operationType := models.OperationTypeCreated
+	if isUpdate {
+		operationType = models.OperationTypeUpdated
+	}
+
+	if err := s.createChangeRecordInTx(tx, userID, item.Date, operationType, item, nil); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to create change record: %w", err)
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf(StorageError, err)
+	}
+
+	return nil
+}
+
+func (s *storage) DeleteItem(userID, itemID string) error {
+	// Start a transaction to ensure atomicity
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return fmt.Errorf(StorageError, tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Get the item before deletion for the change record
+	var item models.Item
+	if err := tx.Where("user_id = ? AND date = ?", userID, itemID).First(&item).Error; err != nil {
+		tx.Rollback()
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrNotFound
+		}
+		return fmt.Errorf(StorageError, err)
+	}
+
+	// Delete the item
+	if err := tx.Where("user_id = ? AND date = ?", userID, itemID).Delete(&models.Item{}).Error; err != nil {
+		tx.Rollback()
+		return fmt.Errorf(StorageError, err)
+	}
+
+	// Create change record for deletion
+	if err := s.createChangeRecordInTx(tx, userID, itemID, models.OperationTypeDeleted, &item, nil); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to create change record: %w", err)
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
 		return fmt.Errorf(StorageError, err)
 	}
 
@@ -240,3 +323,79 @@ func (s *storage) GetNextDate(userID, date string) (string, error) {
 }
 
 // #endregion Dates
+
+// #region Change Tracking
+
+// createChangeRecordInTx creates a change record within an existing transaction
+func (s *storage) createChangeRecordInTx(tx *gorm.DB, userID, date string,
+	operationType models.OperationType, itemSnapshot *models.Item, metadata []string,
+) error {
+	change := &models.ItemChange{
+		UserID:        userID,
+		Date:          date,
+		OperationType: operationType,
+		Timestamp:     time.Now(),
+		ItemSnapshot:  itemSnapshot,
+		Metadata:      models.StringList(metadata),
+	}
+
+	if err := tx.Create(change).Error; err != nil {
+		return fmt.Errorf(StorageError, err)
+	}
+
+	return nil
+}
+
+// CreateChangeRecord creates a change record for synchronization
+func (s *storage) CreateChangeRecord(userID, date string, operationType models.OperationType,
+	itemSnapshot *models.Item, metadata []string,
+) error {
+	change := &models.ItemChange{
+		UserID:        userID,
+		Date:          date,
+		OperationType: operationType,
+		Timestamp:     time.Now(),
+		ItemSnapshot:  itemSnapshot,
+		Metadata:      models.StringList(metadata),
+	}
+
+	if err := s.db.Create(change).Error; err != nil {
+		return fmt.Errorf(StorageError, err)
+	}
+
+	return nil
+}
+
+// GetChangesSince retrieves changes for a user since a given change ID
+func (s *storage) GetChangesSince(userID string, sinceID uint, limit int) ([]*models.ItemChange, error) {
+	var changes []*models.ItemChange
+
+	query := s.db.Where("user_id = ? AND id > ?", userID, sinceID).
+		Order("id ASC").
+		Limit(limit)
+
+	if err := query.Find(&changes).Error; err != nil {
+		return nil, fmt.Errorf(StorageError, err)
+	}
+
+	return changes, nil
+}
+
+// GetLatestChangeID returns the latest change ID for a user
+func (s *storage) GetLatestChangeID(userID string) (uint, error) {
+	var change models.ItemChange
+
+	err := s.db.Where("user_id = ?", userID).
+		Order("id DESC").
+		First(&change).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, nil // No changes yet
+		}
+		return 0, fmt.Errorf(StorageError, err)
+	}
+
+	return change.ID, nil
+}
+
+// #endregion Change Tracking

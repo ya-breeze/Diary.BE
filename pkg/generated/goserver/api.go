@@ -40,6 +40,13 @@ type ItemsAPIRouter interface {
 	PutItems(http.ResponseWriter, *http.Request)
 }
 
+// SyncAPIRouter defines the required methods for binding the api requests to a responses for the SyncAPI
+// The SyncAPIRouter implementation should parse necessary information from the http request,
+// pass the data to a SyncAPIServicer to perform the required actions, then write the service results to the http response.
+type SyncAPIRouter interface {
+	GetChanges(http.ResponseWriter, *http.Request)
+}
+
 // UserAPIRouter defines the required methods for binding the api requests to a responses for the UserAPI
 // The UserAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a UserAPIServicer to perform the required actions, then write the service results to the http response.
@@ -71,6 +78,14 @@ type AuthAPIServicer interface {
 type ItemsAPIServicer interface {
 	GetItems(context.Context, string, string, string) (ImplResponse, error)
 	PutItems(context.Context, ItemsRequest) (ImplResponse, error)
+}
+
+// SyncAPIServicer defines the api actions for the SyncAPI service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type SyncAPIServicer interface {
+	GetChanges(context.Context, int32, int32) (ImplResponse, error)
 }
 
 // UserAPIServicer defines the api actions for the UserAPI service

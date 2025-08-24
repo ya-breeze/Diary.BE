@@ -175,6 +175,45 @@ paths:
         "401":
           description: Unauthorized
 
+  /v1/sync/changes:
+    get:
+      tags:
+        - sync
+      summary: get changes for synchronization
+      operationId: getChanges
+      parameters:
+        - name: since
+          in: query
+          description: get changes since this change ID (exclusive)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+          example: 123
+        - name: limit
+          in: query
+          description: maximum number of changes to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 1000
+            default: 100
+          example: 50
+      responses:
+        "200":
+          description: changes retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResponse"
+        "400":
+          description: Invalid parameters
+        "401":
+          description: Unauthorized
+
 security:
   - BearerAuth: []
 
@@ -293,3 +332,69 @@ components:
       required:
         - items
         - totalCount
+
+    SyncResponse:
+      type: object
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncChangeResponse"
+          description: "List of changes since the requested ID"
+        hasMore:
+          type: boolean
+          description: "Whether there are more changes available"
+          example: true
+        nextId:
+          type: integer
+          format: int32
+          description: "ID to use for the next sync request (if hasMore is true)"
+          example: 456
+      required:
+        - changes
+        - hasMore
+
+    SyncChangeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+          description: "Unique change ID"
+          example: 123
+        userId:
+          type: string
+          description: "User ID who made the change"
+          example: "user-123"
+        date:
+          type: string
+          format: date
+          description: "Date of the diary entry that was changed"
+          example: "2024-01-15"
+        operationType:
+          type: string
+          enum: ["created", "updated", "deleted"]
+          description: "Type of operation performed"
+          example: "updated"
+        timestamp:
+          type: string
+          format: date-time
+          description: "When the change occurred"
+          example: "2024-01-15T10:30:00Z"
+        itemSnapshot:
+          allOf:
+            - $ref: "#/components/schemas/ItemsResponse"
+          nullable: true
+          description: "Current state of the item (null for deleted items)"
+        metadata:
+          type: array
+          items:
+            type: string
+          description: "Additional metadata about the change"
+          example: ["mobile-app", "v1.2.3"]
+      required:
+        - id
+        - userId
+        - date
+        - operationType
+        - timestamp

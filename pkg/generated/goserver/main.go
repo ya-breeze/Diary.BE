@@ -29,6 +29,7 @@ type CustomControllers struct {
 	AssetsAPIService AssetsAPIService
 	AuthAPIService   AuthAPIService
 	ItemsAPIService  ItemsAPIService
+	SyncAPIService   SyncAPIService
 	UserAPIService   UserAPIService
 }
 
@@ -58,13 +59,19 @@ func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
 	}
 	ItemsAPIController := NewItemsAPIController(ItemsAPIService)
 
+	SyncAPIService := NewSyncAPIService()
+	if controllers.SyncAPIService != nil {
+		SyncAPIService = controllers.SyncAPIService
+	}
+	SyncAPIController := NewSyncAPIController(SyncAPIService)
+
 	UserAPIService := NewUserAPIService()
 	if controllers.UserAPIService != nil {
 		UserAPIService = controllers.UserAPIService
 	}
 	UserAPIController := NewUserAPIController(UserAPIService)
 
-	routers := append(extraRouters, AssetsAPIController, AuthAPIController, ItemsAPIController, UserAPIController)
+	routers := append(extraRouters, AssetsAPIController, AuthAPIController, ItemsAPIController, SyncAPIController, UserAPIController)
 	router := NewRouter(routers...)
 
 	router.Use(middlewares...)

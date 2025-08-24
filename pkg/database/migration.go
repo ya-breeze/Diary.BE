@@ -10,5 +10,6 @@ func autoMigrateModels(db *gorm.DB) error {
 	return db.AutoMigrate(
 		&models.User{},
 		&models.Item{},
+		&models.ItemChange{},
 	)
 }
