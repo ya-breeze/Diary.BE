@@ -10,6 +10,21 @@ Write, store, and manage your daily thoughts and experiences securely.
 - 💾 SQLite database for easy deployment
 - 🐳 Docker support for containerized deployment
 
+## Development
+
+### 📋 Before Starting Any Task
+1. **Review Guidelines**: Read `docs/development-guidelines.md` for best practices
+
+### 🔧 Development Workflow
+```bash
+# During development
+make test    # Run tests
+make lint    # Check code quality
+
+# Before committing
+make all     # Run full validation
+```
+
 ## Technical Overview
 The application is built using:
 - Go (backend)
@@ -47,7 +62,7 @@ make run
 ```
 
 Default credentials:
-- Username: test
+- Username: test@example.com
 - Password: test
 
 ## Development
