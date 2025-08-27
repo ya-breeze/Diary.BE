@@ -2,7 +2,7 @@
 
 <div class="container-fluid diary-search-page">
     <header class="diary-page-header">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center mb-2 mb-md-3">
             <div class="search-header">
                 <h1 class="h3 mb-0">Search Results</h1>
                 {{ if .searchQuery }}
@@ -116,7 +116,7 @@
 
 {{ define "layout-toggle" }}
 <div class="layout-toggle-container" role="group" aria-labelledby="layout-toggle-label">
-    <span class="layout-toggle-label" id="layout-toggle-label">Layout:</span>
+    <span class="layout-toggle-label d-none d-md-inline" id="layout-toggle-label">Layout:</span>
 
     <button type="button"
             class="layout-toggle-btn"
@@ -128,7 +128,7 @@
             title="Full Width Layout - Images at 100% width"
             tabindex="0">
         <i class="bi bi-arrows-expand" aria-hidden="true"></i>
-        <span class="visually-hidden">Full width layout: </span>Full
+        <span class="d-none d-lg-inline">Full</span>
     </button>
 
     <button type="button"
@@ -141,7 +141,7 @@
             title="Narrow Layout - Images at 30% width"
             tabindex="0">
         <i class="bi bi-arrows-collapse" aria-hidden="true"></i>
-        <span class="visually-hidden">Narrow layout: </span>Narrow
+        <span class="d-none d-lg-inline">Narrow</span>
     </button>
 
     <div id="layout-status" class="visually-hidden" aria-live="polite" aria-atomic="true">
