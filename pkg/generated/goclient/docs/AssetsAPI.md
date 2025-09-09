@@ -6,6 +6,7 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**GetAsset**](AssetsAPI.md#GetAsset) | **Get** /v1/assets | return asset by path
 [**UploadAsset**](AssetsAPI.md#UploadAsset) | **Post** /v1/assets | upload an asset file
+[**UploadAssetsBatch**](AssetsAPI.md#UploadAssetsBatch) | **Post** /v1/assets/batch | upload multiple asset files
 
 
 
@@ -131,6 +132,70 @@ Name | Type | Description  | Notes
 
 - **Content-Type**: multipart/form-data
 - **Accept**: text/plain
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
+[[Back to Model list]](../README.md#documentation-for-models)
+[[Back to README]](../README.md)
+
+
+## UploadAssetsBatch
+
+> AssetsBatchResponse UploadAssetsBatch(ctx).Assets(assets).Execute()
+
+upload multiple asset files
+
+### Example
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	openapiclient "github.com/GIT_USER_ID/GIT_REPO_ID"
+)
+
+func main() {
+	assets := []*os.File{"TODO"} // []*os.File | Asset files to upload
+
+	configuration := openapiclient.NewConfiguration()
+	apiClient := openapiclient.NewAPIClient(configuration)
+	resp, r, err := apiClient.AssetsAPI.UploadAssetsBatch(context.Background()).Assets(assets).Execute()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error when calling `AssetsAPI.UploadAssetsBatch``: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+	}
+	// response from `UploadAssetsBatch`: AssetsBatchResponse
+	fmt.Fprintf(os.Stdout, "Response from `AssetsAPI.UploadAssetsBatch`: %v\n", resp)
+}
+```
+
+### Path Parameters
+
+
+
+### Other Parameters
+
+Other parameters are passed through a pointer to a apiUploadAssetsBatchRequest struct via the builder pattern
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **assets** | **[]*os.File** | Asset files to upload | 
+
+### Return type
+
+[**AssetsBatchResponse**](AssetsBatchResponse.md)
+
+### Authorization
+
+[BearerAuth](../README.md#BearerAuth)
+
+### HTTP request headers
+
+- **Content-Type**: multipart/form-data
+- **Accept**: application/json
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints)
 [[Back to Model list]](../README.md#documentation-for-models)

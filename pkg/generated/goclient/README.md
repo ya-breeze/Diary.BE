@@ -80,6 +80,7 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AssetsAPI* | [**GetAsset**](docs/AssetsAPI.md#getasset) | **Get** /v1/assets | return asset by path
 *AssetsAPI* | [**UploadAsset**](docs/AssetsAPI.md#uploadasset) | **Post** /v1/assets | upload an asset file
+*AssetsAPI* | [**UploadAssetsBatch**](docs/AssetsAPI.md#uploadassetsbatch) | **Post** /v1/assets/batch | upload multiple asset files
 *AuthAPI* | [**Authorize**](docs/AuthAPI.md#authorize) | **Post** /v1/authorize | validate user/password and return token
 *ItemsAPI* | [**GetItems**](docs/ItemsAPI.md#getitems) | **Get** /v1/items | get diary items
 *ItemsAPI* | [**PutItems**](docs/ItemsAPI.md#putitems) | **Put** /v1/items | upsert diary item
@@ -89,6 +90,8 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AssetsBatchFile](docs/AssetsBatchFile.md)
+ - [AssetsBatchResponse](docs/AssetsBatchResponse.md)
  - [AuthData](docs/AuthData.md)
  - [Authorize200Response](docs/Authorize200Response.md)
  - [Entity](docs/Entity.md)

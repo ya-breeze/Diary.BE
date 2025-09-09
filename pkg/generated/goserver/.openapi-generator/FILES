@@ -18,6 +18,8 @@ go/error.go
 go/helpers.go
 go/impl.go
 go/logger.go
+go/model_assets_batch_file.go
+go/model_assets_batch_response.go
 go/model_auth_data.go
 go/model_authorize_200_response.go
 go/model_entity.go

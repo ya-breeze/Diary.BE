@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log/slog"
+	"maps"
 	"math"
 	"net/url"
 	"path/filepath"
@@ -42,64 +43,37 @@ func NewWebAppRouter(
 }
 
 func (r *WebAppRouter) Routes() goserver.Routes {
+	res := goserver.Routes{}
+	merge := func(m goserver.Routes) { maps.Copy(res, m) }
+	merge(r.routesCore())
+	merge(r.routesUploads())
+	merge(r.routesStatic())
+	return res
+}
+
+func (r *WebAppRouter) routesCore() goserver.Routes {
 	return goserver.Routes{
-		"RootPath": goserver.Route{
-			Method:      "GET",
-			Pattern:     "/",
-			HandlerFunc: r.homeHandler,
-		},
+		"RootPath":  {Method: "GET", Pattern: "/", HandlerFunc: r.homeHandler},
+		"Login":     {Method: "POST", Pattern: "/web/login", HandlerFunc: r.loginHandler},
+		"Logout":    {Method: "GET", Pattern: "/web/logout", HandlerFunc: r.logoutHandler},
+		"AboutPath": {Method: "GET", Pattern: "/web/about", HandlerFunc: r.aboutHandler},
+		"Search":    {Method: "GET", Pattern: "/web/search", HandlerFunc: r.searchHandler},
+		"Edit":      {Method: "GET", Pattern: "/web/edit", HandlerFunc: r.editHandler},
+		"Save":      {Method: "POST", Pattern: "/web/edit", HandlerFunc: r.saveHandler},
+	}
+}
 
-		"Login": goserver.Route{
-			Method:      "POST",
-			Pattern:     "/web/login",
-			HandlerFunc: r.loginHandler,
-		},
-		"Logout": goserver.Route{
-			Method:      "GET",
-			Pattern:     "/web/logout",
-			HandlerFunc: r.logoutHandler,
-		},
+func (r *WebAppRouter) routesUploads() goserver.Routes {
+	return goserver.Routes{
+		"Upload":      {Method: "POST", Pattern: "/web/upload", HandlerFunc: r.uploadHandler},
+		"UploadBatch": {Method: "POST", Pattern: "/web/upload-batch", HandlerFunc: r.uploadBatchHandler},
+	}
+}
 
-		"AboutPath": goserver.Route{
-			Method:      "GET",
-			Pattern:     "/web/about",
-			HandlerFunc: r.aboutHandler,
-		},
-
-		"Search": goserver.Route{
-			Method:      "GET",
-			Pattern:     "/web/search",
-			HandlerFunc: r.searchHandler,
-		},
-
-		"Edit": goserver.Route{
-			Method:      "GET",
-			Pattern:     "/web/edit",
-			HandlerFunc: r.editHandler,
-		},
-		"Save": goserver.Route{
-			Method:      "POST",
-			Pattern:     "/web/edit",
-			HandlerFunc: r.saveHandler,
-		},
-
-		"Upload": goserver.Route{
-			Method:      "POST",
-			Pattern:     "/web/upload",
-			HandlerFunc: r.uploadHandler,
-		},
-
-		"Assets": goserver.Route{
-			Method:      "GET",
-			Pattern:     "/web/assets/{rest:.*}",
-			HandlerFunc: r.assetsHandler,
-		},
-
-		"Static": goserver.Route{
-			Method:      "GET",
-			Pattern:     "/web/static/{rest:.*}",
-			HandlerFunc: r.staticHandler,
-		},
+func (r *WebAppRouter) routesStatic() goserver.Routes {
+	return goserver.Routes{
+		"Assets": {Method: "GET", Pattern: "/web/assets/{rest:.*}", HandlerFunc: r.assetsHandler},
+		"Static": {Method: "GET", Pattern: "/web/static/{rest:.*}", HandlerFunc: r.staticHandler},
 	}
 }
 

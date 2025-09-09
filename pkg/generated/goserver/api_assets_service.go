@@ -24,6 +24,8 @@ type AssetsAPIService interface {
 	GetAsset(ctx context.Context, path string) (ImplResponse, error)
 	// UploadAsset - upload an asset file
 	UploadAsset(ctx context.Context, asset *os.File) (ImplResponse, error)
+	// UploadAssetsBatch - upload multiple asset files
+	UploadAssetsBatch(ctx context.Context, assets []*os.File) (ImplResponse, error)
 }
 
 // AssetsAPIService is a service that implements the logic for the AssetsAPIServicer
@@ -72,4 +74,27 @@ func (s *AssetsAPIServiceImpl) UploadAsset(ctx context.Context, asset *os.File) 
 	// return Response(500, nil),nil
 
 	return Response(http.StatusNotImplemented, nil), errors.New("UploadAsset method not implemented")
+}
+
+// UploadAssetsBatch - upload multiple asset files
+func (s *AssetsAPIServiceImpl) UploadAssetsBatch(ctx context.Context, assets []*os.File) (ImplResponse, error) {
+	// TODO - update UploadAssetsBatch with the required logic for this service method.
+	// Add api_assets_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	// TODO: Uncomment the next line to return response Response(200, AssetsBatchResponse{}) or use other options such as http.Ok ...
+	// return Response(200, AssetsBatchResponse{}), nil
+
+	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
+	// return Response(400, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
+	// return Response(401, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(413, {}) or use other options such as http.Ok ...
+	// return Response(413, nil),nil
+
+	// TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
+	// return Response(500, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("UploadAssetsBatch method not implemented")
 }

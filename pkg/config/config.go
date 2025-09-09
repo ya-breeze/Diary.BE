@@ -19,6 +19,11 @@ type Config struct {
 	DisableCurrenciesRatesFetch bool   `mapstructure:"disablecurrenciesratesfetch" default:"false"`
 	Issuer                      string `mapstructure:"issuer" default:"diary"`
 	CookieName                  string `mapstructure:"cookiename" default:"diarycookie"`
+
+	// Batch upload limits
+	MaxPerFileSizeMB    int `mapstructure:"maxperfilesizemb" default:"100"`
+	MaxBatchFiles       int `mapstructure:"maxbatchfiles" default:"100"`
+	MaxBatchTotalSizeMB int `mapstructure:"maxbatchtotalsizemb" default:"500"`
 }
 
 func InitiateConfig(cfgFile string) (*Config, error) {

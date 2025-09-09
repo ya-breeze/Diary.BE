@@ -76,3 +76,18 @@ Environment variables:
 - `GB_USERS` - User credentials
 - `GB_DBPATH` - Database path
 - `GB_ASSETPATH` - Assets path
+- `GB_MAXPERFILESIZEMB` - Max size per uploaded file in MB (default 25)
+- `GB_MAXBATCHFILES` - Max number of files per batch (default 10)
+- `GB_MAXBATCHTOTALSIZEMB` - Max total size per batch in MB (default 100)
+
+## Batch Asset Uploads
+- API endpoint: `POST /v1/assets/batch`
+  - multipart/form-data with repeated field `assets`
+  - Response JSON example:
+    ```json
+    { "files": [{"originalName":"photo.jpg","savedName":"<uuid>.jpg","size":12345,"contentType":"image/jpeg"}], "count": 1 }
+    ```
+
+- Single upload remains available at `POST /v1/assets` with field `asset`
+
+- Web UI: the Edit page file picker supports multi-select; when multiple files are chosen, it automatically calls the batch endpoint. A progress bar and errors are shown inline.

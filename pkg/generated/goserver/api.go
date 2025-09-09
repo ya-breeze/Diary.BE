@@ -23,6 +23,7 @@ import (
 type AssetsAPIRouter interface {
 	GetAsset(http.ResponseWriter, *http.Request)
 	UploadAsset(http.ResponseWriter, *http.Request)
+	UploadAssetsBatch(http.ResponseWriter, *http.Request)
 }
 
 // AuthAPIRouter defines the required methods for binding the api requests to a responses for the AuthAPI
@@ -61,6 +62,7 @@ type UserAPIRouter interface {
 type AssetsAPIServicer interface {
 	GetAsset(context.Context, string) (ImplResponse, error)
 	UploadAsset(context.Context, *os.File) (ImplResponse, error)
+	UploadAssetsBatch(context.Context, []*os.File) (ImplResponse, error)
 }
 
 // AuthAPIServicer defines the api actions for the AuthAPI service

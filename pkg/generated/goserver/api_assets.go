@@ -60,6 +60,11 @@ func (c *AssetsAPIController) Routes() Routes {
 			"/v1/assets",
 			c.UploadAsset,
 		},
+		"UploadAssetsBatch": Route{
+			strings.ToUpper("Post"),
+			"/v1/assets/batch",
+			c.UploadAssetsBatch,
+		},
 	}
 }
 
@@ -107,6 +112,33 @@ func (c *AssetsAPIController) UploadAsset(w http.ResponseWriter, r *http.Request
 	}
 
 	result, err := c.service.UploadAsset(r.Context(), assetParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// UploadAssetsBatch - upload multiple asset files
+func (c *AssetsAPIController) UploadAssetsBatch(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(32 << 20); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	var assetsParam []*os.File
+	{
+		param, err := ReadFormFilesToTempFiles(r, "assets")
+		if err != nil {
+			c.errorHandler(w, r, &ParsingError{Param: "assets", Err: err}, nil)
+			return
+		}
+
+		assetsParam = param
+	}
+
+	result, err := c.service.UploadAssetsBatch(r.Context(), assetsParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

@@ -102,9 +102,13 @@ func Serve(
 	// Create controllers
 	controllers := createControllers(logger, cfg, storage)
 
+	// Add extra routers (webapp + manual batch upload route)
+	extraRouters := []goserver.Router{webapp.NewWebAppRouter(controllers, commit, logger, cfg, storage)}
+	extraRouters = append(extraRouters, api.NewAssetsBatchRouter(logger, cfg))
+
 	return goserver.Serve(ctx, logger, cfg,
 		controllers,
-		[]goserver.Router{webapp.NewWebAppRouter(controllers, commit, logger, cfg, storage)},
+		extraRouters,
 		createMiddlewares(logger, cfg)...)
 }
 

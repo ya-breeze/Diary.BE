@@ -192,3 +192,11 @@ func (s *AssetsAPIServiceImpl) UploadAsset(ctx context.Context, asset *os.File) 
 	// Return the filename as the response body using PlainTextResponse for text/plain content type
 	return goserver.Response(http.StatusOK, goserver.PlainTextResponse{Text: filename}), nil
 }
+
+// UploadAssetsBatch - not implemented here; manual router handles /v1/assets/batch.
+func (s *AssetsAPIServiceImpl) UploadAssetsBatch(
+	ctx context.Context,
+	assetsFiles []*os.File,
+) (goserver.ImplResponse, error) {
+	return goserver.Response(http.StatusNotImplemented, nil), nil
+}

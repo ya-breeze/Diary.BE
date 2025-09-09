@@ -11,6 +11,8 @@ api_user.go
 client.go
 configuration.go
 docs/AssetsAPI.md
+docs/AssetsBatchFile.md
+docs/AssetsBatchResponse.md
 docs/AuthAPI.md
 docs/AuthData.md
 docs/Authorize200Response.md
@@ -25,6 +27,8 @@ docs/SyncResponse.md
 docs/User.md
 docs/UserAPI.md
 git_push.sh
+model_assets_batch_file.go
+model_assets_batch_response.go
 model_auth_data.go
 model_authorize_200_response.go
 model_entity.go

@@ -112,6 +112,43 @@ paths:
         "500":
           description: Internal server error - failed to save file
 
+  /v1/assets/batch:
+    post:
+      tags:
+        - assets
+      summary: upload multiple asset files
+      operationId: uploadAssetsBatch
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                assets:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  description: "Asset files to upload"
+              required:
+                - assets
+        required: true
+      responses:
+        "200":
+          description: assets uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetsBatchResponse"
+        "400":
+          description: Bad request - invalid files or missing assets field
+        "401":
+          description: Unauthorized - authentication required
+        "413":
+          description: Payload too large - batch or file size limits exceeded
+        "500":
+          description: Internal server error - failed to save files
+
   /v1/items:
     get:
       tags:
@@ -398,3 +435,43 @@ components:
         - date
         - operationType
         - timestamp
+
+    AssetsBatchFile:
+      type: object
+      properties:
+        originalName:
+          type: string
+          description: Original filename provided by the client
+          example: "photo.jpg"
+        savedName:
+          type: string
+          description: Server-side stored filename
+          example: "123e4567-e89b-12d3-a456-426614174000.jpg"
+        size:
+          type: integer
+          format: int64
+          description: File size in bytes
+          example: 102400
+        contentType:
+          type: string
+          description: MIME type detected for the file
+          example: "image/jpeg"
+      required:
+        - originalName
+        - savedName
+        - size
+
+    AssetsBatchResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssetsBatchFile"
+        count:
+          type: integer
+          description: Number of files successfully uploaded
+          example: 3
+      required:
+        - files
+        - count
