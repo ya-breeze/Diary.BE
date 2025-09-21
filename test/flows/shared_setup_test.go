@@ -62,7 +62,7 @@ func SetupTestEnvironment() *SharedTestSetup {
 	Expect(setup.Storage.Open()).To(Succeed())
 
 	// Create test user
-	setup.TestEmail = "test@example.com"
+	setup.TestEmail = "test@test.com"
 	setup.TestPass = "testpassword123"
 
 	hashedPassBytes, err := auth.HashPassword([]byte(setup.TestPass))

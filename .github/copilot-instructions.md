@@ -19,7 +19,7 @@ Always reference these instructions first and fallback to search or bash command
 - **Local run**: `make run` (starts server on port 8080 with test user)
 - **Manual run**: 
   ```bash
-  GB_USERS=test@example.com:JDJhJDEwJC9sVWJpTlBYVlZvcU9ZNUxIZmhqYi4vUnRuVkJNaEw4MTQ2VUdFSXRDeE9Ib0ZoVkRLR3pl \
+  GB_USERS=test@test.com:JDJhJDEwJC9sVWJpTlBYVlZvcU9ZNUxIZmhqYi4vUnRuVkJNaEw4MTQ2VUdFSXRDeE9Ib0ZoVkRLR3pl \
   GB_DISABLEIMPORTERS=true \
   GB_DBPATH=$(pwd)/diary.db \
   GB_ASSETPATH=$(pwd)/diary-assets \
@@ -54,9 +54,9 @@ Environment variables (see `make run` for examples):
 - **`GB_DISABLEIMPORTERS`**: Disable background data importers
 
 ### Test User Credentials
-- Username: `test@example.com`
+- Username: `test@test.com`
 - Password: `test`
-- Encoded: `test@example.com:JDJhJDEwJC9sVWJpTlBYVlZvcU9ZNUxIZmhqYi4vUnRuVkJNaEw4MTQ2VUdFSXRDeE9Ib0ZoVkRLR3pl`
+- Encoded: `test@test.com:JDJhJDEwJC9sVWJpTlBYVlZvcU9ZNUxIZmhqYi4vUnRuVkJNaEw4MTQ2VUdFSXRDeE9Ib0ZoVkRLR3pl`
 
 ## Development Workflow
 

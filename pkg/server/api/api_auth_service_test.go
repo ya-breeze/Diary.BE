@@ -40,7 +40,7 @@ var _ = Describe("AuthAPIService", func() {
 
 		service = api.NewAuthAPIService(logger, storage, cfg)
 		ctx = context.Background()
-		testEmail = "test@example.com"
+		testEmail = "test@test.com"
 		testPass = "testpassword123"
 
 		// Create a test user
