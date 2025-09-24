@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"github.com/ya-breeze/diary.be/pkg/database"
 	"github.com/ya-breeze/diary.be/pkg/generated/goserver"
@@ -27,14 +28,27 @@ func (s *SyncAPIServiceImpl) GetChanges(
 	since int32,
 	limit int32,
 ) (goserver.ImplResponse, error) {
+	start := time.Now()
+	const op = "changes"
+
 	// Get user ID from context (set by auth middleware)
 	userID, ok := ctx.Value(common.UserIDKey).(string)
 	if !ok {
-		s.logger.Error("User ID not found in context")
+		s.logger.With(
+			"syncOp", op,
+			"since", since,
+			"limit", limit,
+			"duration", time.Since(start),
+		).Error("User ID not found in context")
 		return goserver.Response(401, nil), nil
 	}
 
-	s.logger.Info("Getting changes for sync", "userID", userID, "since", since, "limit", limit)
+	s.logger.Info("Sync request received",
+		"syncOp", op,
+		"userID", userID,
+		"since", since,
+		"limit", limit,
+	)
 
 	// Validate parameters
 	if limit <= 0 || limit > 1000 {
@@ -48,7 +62,15 @@ func (s *SyncAPIServiceImpl) GetChanges(
 	}
 	changes, err := s.db.GetChangesSince(userID, sinceUint, int(limit))
 	if err != nil {
-		s.logger.Error("Failed to get changes", "error", err, "userID", userID, "since", since)
+		s.logger.Error("Sync operation failed",
+			"syncOp", op,
+			"userID", userID,
+			"since", since,
+			"limit", limit,
+			"status", 500,
+			"error", err,
+			"duration", time.Since(start),
+		)
 		return goserver.Response(500, nil), nil
 	}
 
@@ -74,6 +96,19 @@ func (s *SyncAPIServiceImpl) GetChanges(
 		HasMore: hasMore,
 		NextId:  nextID,
 	}
+
+	// Structured completion log with response details
+	s.logger.Info("Sync completed",
+		"syncOp", op,
+		"userID", userID,
+		"since", since,
+		"limit", limit,
+		"items", len(responseChanges),
+		"hasMore", hasMore,
+		"nextId", nextID,
+		"status", 200,
+		"duration", time.Since(start),
+	)
 
 	return goserver.Response(200, response), nil
 }
