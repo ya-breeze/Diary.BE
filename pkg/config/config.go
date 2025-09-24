@@ -21,9 +21,9 @@ type Config struct {
 	CookieName                  string `mapstructure:"cookiename" default:"diarycookie"`
 
 	// Batch upload limits
-	MaxPerFileSizeMB    int `mapstructure:"maxperfilesizemb" default:"100"`
+	MaxPerFileSizeMB    int `mapstructure:"maxperfilesizemb" default:"200"`
 	MaxBatchFiles       int `mapstructure:"maxbatchfiles" default:"100"`
-	MaxBatchTotalSizeMB int `mapstructure:"maxbatchtotalsizemb" default:"500"`
+	MaxBatchTotalSizeMB int `mapstructure:"maxbatchtotalsizemb" default:"1000"`
 }
 
 func InitiateConfig(cfgFile string) (*Config, error) {
