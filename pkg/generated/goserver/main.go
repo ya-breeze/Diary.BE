@@ -17,6 +17,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -76,12 +77,23 @@ func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
 
 	router.Use(middlewares...)
 
+	// CORS configuration with credentials support
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
+	// Parse allowed origins from config (comma-separated)
+	allowedOrigins := []string{"http://localhost:3000"}
+	if cfg.AllowedOrigins != "" {
+		allowedOrigins = strings.Split(cfg.AllowedOrigins, ",")
+		// Trim whitespace from each origin
+		for i := range allowedOrigins {
+			allowedOrigins[i] = strings.TrimSpace(allowedOrigins[i])
+		}
+	}
+	originsOk := handlers.AllowedOrigins(allowedOrigins)
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
+	credentialsOk := handlers.AllowCredentials()
 
 	server := &http.Server{
-		Handler: handlers.CORS(originsOk, headersOk, methodsOk)(router),
+		Handler: handlers.CORS(originsOk, headersOk, methodsOk, credentialsOk)(router),
 	}
 
 	go func() {

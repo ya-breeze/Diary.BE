@@ -102,9 +102,11 @@ func Serve(
 	// Create controllers
 	controllers := createControllers(logger, cfg, storage)
 
-	// Add extra routers (webapp + manual batch upload route)
+	// Add extra routers (webapp + manual batch upload route + custom auth controller with cookie support)
 	extraRouters := []goserver.Router{webapp.NewWebAppRouter(controllers, commit, logger, cfg, storage)}
 	extraRouters = append(extraRouters, api.NewAssetsBatchRouter(logger, cfg))
+	// Add custom auth controller that sets cookies on login
+	extraRouters = append(extraRouters, api.NewCustomAuthAPIController(controllers.AuthAPIService, logger, cfg))
 
 	return goserver.Serve(ctx, logger, cfg,
 		controllers,

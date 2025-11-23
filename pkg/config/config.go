@@ -19,6 +19,7 @@ type Config struct {
 	DisableCurrenciesRatesFetch bool   `mapstructure:"disablecurrenciesratesfetch" default:"false"`
 	Issuer                      string `mapstructure:"issuer" default:"diary"`
 	CookieName                  string `mapstructure:"cookiename" default:"diarycookie"`
+	AllowedOrigins              string `mapstructure:"allowedorigins" default:"http://localhost:3000"`
 
 	// Batch upload limits
 	MaxPerFileSizeMB    int `mapstructure:"maxperfilesizemb" default:"200"`
