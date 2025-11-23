@@ -70,7 +70,7 @@ generate:
 	@mv -f pkg/generated/goserver/go/* pkg/generated/goserver
 	@rm -rf pkg/generated/goserver/go
 	@goimports -l -w ./pkg/generated/
-	@gofumpt -l -w ./pkg/generated/
+	@go tool mvdan.cc/gofumpt -l -w ./pkg/generated/
 
 	@echo "✅ Generation complete"
 
@@ -82,7 +82,7 @@ validate:
 .PHONY: lint
 lint:
 	@go tool github.com/golangci/golangci-lint/cmd/golangci-lint run
-	@$(shell go env GOPATH)/bin/gofumpt -l -d .
+	@go tool mvdan.cc/gofumpt -l -d .
 	@echo "✅ Lint complete"
 
 .PHONY: test
