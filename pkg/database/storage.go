@@ -13,7 +13,7 @@ import (
 	"gorm.io/gorm"
 )
 
-//go:generate go tool github.com/golang/mock/mockgen -destination=mocks/mock_storage.go -package=mocks github.com/ya-breeze/diary.be/pkg/database Storage
+//go:generate go tool github.com/golang/mock/mockgen -destination=mocks/mock_storage.go -package=mocks github.com/ya-breeze/diary.be/pkg/database Storage //nolint:lll // go:generate directive
 
 const StorageError = "storage error: %w"
 

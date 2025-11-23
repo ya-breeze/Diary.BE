@@ -28,6 +28,8 @@ linters-settings:
     enable-all: true
     disable:
       - fieldalignment
+  lll:
+    line-length: 140
 
 issues:
   exclude-dirs:

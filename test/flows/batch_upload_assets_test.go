@@ -1,4 +1,3 @@
-//nolint:lll // test code
 package flows_test
 
 import (
