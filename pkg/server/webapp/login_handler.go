@@ -165,13 +165,13 @@ func (r *WebAppRouter) GetUserIDFromSession(req *http.Request) (string, int, err
 	session, err := r.cookies.Get(req, r.cfg.CookieName)
 	if err != nil {
 		r.logger.Error("Failed to get session", "error", err)
-		return "", http.StatusBadRequest, err
+		return "", http.StatusUnauthorized, err
 	}
 
 	token, ok := session.Values["token"].(string)
 	if !ok {
 		r.logger.Warn("failed to get token from session")
-		return "", http.StatusBadRequest, errors.New("token not found in session")
+		return "", http.StatusUnauthorized, errors.New("token not found in session")
 	}
 
 	userID, err := auth.CheckJWT(token, r.cfg.Issuer, r.cfg.JWTSecret)
@@ -189,7 +189,7 @@ func (r *WebAppRouter) GetUserIDFromSession(req *http.Request) (string, int, err
 func (r *WebAppRouter) ValidateUserID(
 	tmpl *template.Template, w http.ResponseWriter, req *http.Request,
 ) (string, error) {
-	userID, _, err := r.GetUserIDFromSession(req)
+	userID, statusCode, err := r.GetUserIDFromSession(req)
 	if err != nil {
 		// Capture the current request URL for redirect after login
 		redirectURL := req.URL.String()
@@ -198,6 +198,9 @@ func (r *WebAppRouter) ValidateUserID(
 		data := map[string]any{
 			"RedirectURL": redirectURL,
 		}
+
+		// Set the status code before writing the response
+		w.WriteHeader(statusCode)
 
 		if errTmpl := tmpl.ExecuteTemplate(w, "login.tpl", data); errTmpl != nil {
 			r.logger.Warn("failed to execute login template", "error", errTmpl)
