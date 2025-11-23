@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/ya-breeze/diary.be/pkg/server/common"
 )
 
 // statusRecorder wraps http.ResponseWriter to capture the status code
@@ -27,13 +29,33 @@ func Logger(inner http.Handler, name string) http.Handler {
 
 		inner.ServeHTTP(rec, r)
 
-		log.Printf(
-			"%s %s %s %d %s",
-			r.Method,
-			r.RequestURI,
-			name,
-			rec.status,
-			time.Since(start),
-		)
+		// Extract user ID from context if available
+		userID := ""
+		if uid := r.Context().Value(common.UserIDKey); uid != nil {
+			if uidStr, ok := uid.(string); ok {
+				userID = uidStr
+			}
+		}
+
+		if userID != "" {
+			log.Printf(
+				"%s %s %s %d %s userID=%s",
+				r.Method,
+				r.RequestURI,
+				name,
+				rec.status,
+				time.Since(start),
+				userID,
+			)
+		} else {
+			log.Printf(
+				"%s %s %s %d %s",
+				r.Method,
+				r.RequestURI,
+				name,
+				rec.status,
+				time.Since(start),
+			)
+		}
 	})
 }

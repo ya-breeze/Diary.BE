@@ -180,6 +180,9 @@ func (r *WebAppRouter) GetUserIDFromSession(req *http.Request) (string, int, err
 		return "", http.StatusUnauthorized, err
 	}
 
+	// Log successful authentication with user ID from cookie
+	r.logger.Info("Request authenticated", "userID", userID, "source", "cookie", "path", req.URL.Path, "method", req.Method)
+
 	return userID, http.StatusOK, nil
 }
 

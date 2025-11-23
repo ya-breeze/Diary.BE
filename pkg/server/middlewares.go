@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"log"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -15,6 +16,11 @@ import (
 func AuthMiddleware(logger *slog.Logger, cfg *config.Config) mux.MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(writer http.ResponseWriter, req *http.Request) {
+			log.Printf(
+				"%s %s",
+				req.Method,
+				req.RequestURI)
+
 			// Skip authorization for the root endpoint
 			if req.URL.Path == "/" || strings.HasPrefix(req.URL.Path, "/web/") {
 				next.ServeHTTP(writer, req)
@@ -37,7 +43,7 @@ func checkToken(
 	logger *slog.Logger, issuer, jwtSecret string, next http.Handler,
 	writer http.ResponseWriter, req *http.Request,
 ) {
-	// Authorization logic
+	// Authorization logic - only check Authorization header
 	authHeader := req.Header.Get("Authorization")
 	if authHeader == "" {
 		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
@@ -57,6 +63,9 @@ func checkToken(
 		http.Error(writer, "Invalid token", http.StatusUnauthorized)
 		return
 	}
+
+	// Log successful authentication with user ID
+	logger.Info("Request authenticated", "userID", userID, "source", "header", "path", req.URL.Path, "method", req.Method)
 
 	req = req.WithContext(context.WithValue(req.Context(), common.UserIDKey, userID))
 	next.ServeHTTP(writer, req)
