@@ -20,7 +20,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	"github.com/ya-breeze/diary.be/pkg/config"
@@ -77,8 +76,6 @@ func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
 
 	router.Use(middlewares...)
 
-	// CORS configuration with credentials support
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
 	// Parse allowed origins from config (comma-separated)
 	allowedOrigins := []string{"http://localhost:3000"}
 	if cfg.AllowedOrigins != "" {
@@ -88,12 +85,12 @@ func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
 			allowedOrigins[i] = strings.TrimSpace(allowedOrigins[i])
 		}
 	}
-	originsOk := handlers.AllowedOrigins(allowedOrigins)
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
-	credentialsOk := handlers.AllowCredentials()
+
+	// Custom CORS middleware that properly handles credentials
+	corsMiddleware := createCORSMiddleware(allowedOrigins)
 
 	server := &http.Server{
-		Handler: handlers.CORS(originsOk, headersOk, methodsOk, credentialsOk)(router),
+		Handler: corsMiddleware(router),
 	}
 
 	go func() {
@@ -111,4 +108,36 @@ func Serve(ctx context.Context, logger *slog.Logger, cfg *config.Config,
 	}()
 
 	return listener.Addr(), finishChan, nil
+}
+
+// createCORSMiddleware creates a CORS middleware that properly handles credentials
+// and only allows specific origins (no wildcard fallback)
+func createCORSMiddleware(allowedOrigins []string) func(http.Handler) http.Handler {
+	allowedOriginsMap := make(map[string]bool)
+	for _, origin := range allowedOrigins {
+		allowedOriginsMap[origin] = true
+	}
+
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+
+			// Check if origin is in allowed list
+			if origin != "" && allowedOriginsMap[origin] {
+				// Set CORS headers for allowed origins
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+				w.Header().Set("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, DELETE, OPTIONS")
+				w.Header().Set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Authorization")
+			}
+
+			// Handle preflight requests
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

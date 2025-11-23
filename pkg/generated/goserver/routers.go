@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -53,7 +52,7 @@ func NewRouter(routers ...Router) *mux.Router {
 		for name, route := range api.Routes() {
 			var handler http.Handler = route.HandlerFunc
 			handler = Logger(handler, name)
-			handler = handlers.CORS()(handler)
+			// CORS is applied globally in main.go, not per-route
 
 			router.
 				Methods(route.Method).

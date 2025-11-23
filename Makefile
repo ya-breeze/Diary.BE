@@ -82,7 +82,7 @@ validate:
 .PHONY: lint
 lint:
 	@go tool github.com/golangci/golangci-lint/cmd/golangci-lint run
-	@gofumpt -l -d .
+	@$(shell go env GOPATH)/bin/gofumpt -l -d .
 	@echo "✅ Lint complete"
 
 .PHONY: test
